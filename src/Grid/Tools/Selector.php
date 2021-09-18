@@ -46,11 +46,10 @@ class Selector
     }
 
     /**
-     * @param string         $column
-     * @param string|array   $label
-     * @param array|\Closure $options
-     * @param null|\Closure  $query
-     *
+     * @param  string  $column
+     * @param  string|array  $label
+     * @param  array|\Closure  $options
+     * @param  null|\Closure  $query
      * @return $this
      */
     public function select(string $column, $label, $options = [], ?\Closure $query = null)
@@ -59,11 +58,10 @@ class Selector
     }
 
     /**
-     * @param string        $column
-     * @param string|array  $label
-     * @param array         $options
-     * @param null|\Closure $query
-     *
+     * @param  string  $column
+     * @param  string|array  $label
+     * @param  array  $options
+     * @param  null|\Closure  $query
      * @return $this
      */
     public function selectOne(string $column, $label, $options = [], ?\Closure $query = null)
@@ -72,12 +70,11 @@ class Selector
     }
 
     /**
-     * @param string $column
-     * @param string $label
-     * @param array  $options
-     * @param null   $query
-     * @param string $type
-     *
+     * @param  string  $column
+     * @param  string  $label
+     * @param  array  $options
+     * @param  null  $query
+     * @param  string  $type
      * @return $this
      */
     protected function addSelector(string $column, $label, $options = [], ?\Closure $query = null, $type = 'many')
@@ -112,8 +109,7 @@ class Selector
     /**
      * Get all selectors.
      *
-     * @param bool $formatKey
-     *
+     * @param  bool  $formatKey
      * @return array|Collection
      */
     public function all(bool $formatKey = false)
@@ -147,6 +143,10 @@ class Selector
 
         foreach ($selected as &$value) {
             $value = explode(',', $value);
+
+            foreach ($value as &$v) {
+                $v = (string) $v;
+            }
         }
 
         return $this->selected = $selected;
@@ -158,10 +158,9 @@ class Selector
     }
 
     /**
-     * @param string $column
-     * @param mixed  $value
-     * @param bool   $add
-     *
+     * @param  string  $column
+     * @param  mixed  $value
+     * @param  bool  $add
      * @return string
      */
     public function url($column, $value = null, $add = false)
@@ -182,8 +181,8 @@ class Selector
             return $this->request->fullUrlWithQuery($query);
         }
 
-        if (in_array($value, $options)) {
-            Helper::deleteByValue($options, $value);
+        if (in_array((string) $value, $options, true)) {
+            Helper::deleteByValue($options, (string) $value, true);
         } else {
             if ($add) {
                 $options = [];

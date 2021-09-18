@@ -30,9 +30,9 @@ class Table extends Widget
     /**
      * Table constructor.
      *
-     * @param array $headers
-     * @param mixed $rows
-     * @param array $style
+     * @param  array  $headers
+     * @param  mixed  $rows
+     * @param  array  $style
      */
     public function __construct($headers = [], $rows = false, $style = [])
     {
@@ -41,18 +41,17 @@ class Table extends Widget
             $headers = [];
         }
 
+        $this->class('table default-table');
+
         $this->setHeaders($headers);
         $this->setRows($rows);
         $this->setStyle($style);
-
-        $this->class('table default-table');
     }
 
     /**
      * Set table headers.
      *
-     * @param array $headers
-     *
+     * @param  array  $headers
      * @return $this
      */
     public function setHeaders($headers = [])
@@ -63,8 +62,7 @@ class Table extends Widget
     }
 
     /**
-     * @param int $depth
-     *
+     * @param  int  $depth
      * @return $this
      */
     public function depth(int $depth)
@@ -77,13 +75,12 @@ class Table extends Widget
     /**
      * Set table rows.
      *
-     * @param array $rows
-     *
+     * @param  array  $rows
      * @return $this
      */
     public function setRows($rows = [])
     {
-        if ($rows && ! Arr::isAssoc(Helper::array($rows))) {
+        if ($rows && ! Arr::isAssoc(Helper::array($rows, false))) {
             $this->rows = $rows;
 
             return $this;
@@ -119,8 +116,7 @@ class Table extends Widget
     /**
      * Set table style.
      *
-     * @param array $style
-     *
+     * @param  array  $style
      * @return $this
      */
     public function setStyle($style = [])

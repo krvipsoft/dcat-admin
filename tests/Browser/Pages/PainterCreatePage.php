@@ -53,9 +53,8 @@ class PainterCreatePage extends Page
     /**
      * 注入表单.
      *
-     * @param Browser $browser
-     * @param array $input
-     *
+     * @param  Browser  $browser
+     * @param  array  $input
      * @return Browser
      */
     public function fill(Browser $browser, array $input)
@@ -93,13 +92,13 @@ class PainterCreatePage extends Page
     /**
      * 提交表单.
      *
-     * @param Browser $browser
-     *
+     * @param  Browser  $browser
      * @return Browser
      */
     public function submit(Browser $browser)
     {
         return $browser->with('@form', function (Browser $browser) {
+            $browser->scrollToTop();
             $browser->press(__('admin.submit'));
             $browser->waitForTextInBody(__('admin.save_succeeded'), 2);
             $browser->waitForLocation(admin_base_path('tests/painters'), 1);

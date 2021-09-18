@@ -19,10 +19,9 @@ class Permission
     /**
      * Handle an incoming request.
      *
-     * @param \Illuminate\Http\Request $request
-     * @param \Closure                 $next
-     * @param array                    $args
-     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @param  array  $args
      * @return mixed
      */
     public function handle(Request $request, \Closure $next, ...$args)
@@ -53,8 +52,7 @@ class Permission
      * If the route of current request contains a middleware prefixed with 'admin.permission:',
      * then it has a manually set permission middleware, we need to handle it first.
      *
-     * @param Request $request
-     *
+     * @param  Request  $request
      * @return bool
      */
     public function checkRoutePermission(Request $request)
@@ -79,20 +77,18 @@ class Permission
     }
 
     /**
-     * @param \Illuminate\Http\Request $request
-     *
+     * @param  \Illuminate\Http\Request  $request
      * @return bool
      */
     protected function isApiRoute($request)
     {
-        return $request->routeIs('dcat.api.*');
+        return $request->routeIs(admin_api_route_name('*'));
     }
 
     /**
      * Determine if the request has a URI that should pass through verification.
      *
-     * @param \Illuminate\Http\Request $request
-     *
+     * @param  \Illuminate\Http\Request  $request
      * @return bool
      */
     public function shouldPassThrough($request)
@@ -107,7 +103,7 @@ class Permission
         );
 
         foreach ($excepts as $except) {
-            if ($request->routeIs($except)) {
+            if ($request->routeIs($except) || $request->routeIs(admin_route_name($except))) {
                 return true;
             }
 

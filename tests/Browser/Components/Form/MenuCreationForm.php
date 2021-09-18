@@ -50,7 +50,7 @@ class MenuCreationForm extends Component
                     ->hasInput('title')
                     ->hasInput('icon')
                     ->hasInput('uri')
-                    ->assertSelected('parent_id', 0)
+                    //->assertSelected('parent_id', 0)
                     ->is(new Tree('permissions'))
                     ->is(new Select2('select[name="parent_id"]'))
                     ->is(new MultipleSelect2('select[name="roles[]"]'));
@@ -60,9 +60,8 @@ class MenuCreationForm extends Component
     /**
      * 注入表单.
      *
-     * @param Browser $browser
-     * @param array $input
-     *
+     * @param  Browser  $browser
+     * @param  array  $input
      * @return Browser
      */
     public function fill(Browser $browser, array $input)

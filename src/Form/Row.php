@@ -10,56 +10,56 @@ use Illuminate\Support\Collection;
 /**
  * Class Row.
  *
- * @method Field\Text                   text($column, $label = '')
- * @method Field\Checkbox               checkbox($column, $label = '')
- * @method Field\Radio                  radio($column, $label = '')
- * @method Field\Select                 select($column, $label = '')
- * @method Field\MultipleSelect         multipleSelect($column, $label = '')
- * @method Field\Textarea               textarea($column, $label = '')
- * @method Field\Hidden                 hidden($column, $label = '')
- * @method Field\Id                     id($column, $label = '')
- * @method Field\Ip                     ip($column, $label = '')
- * @method Field\Url                    url($column, $label = '')
- * @method Field\Email                  email($column, $label = '')
- * @method Field\Mobile                 mobile($column, $label = '')
- * @method Field\Slider                 slider($column, $label = '')
- * @method Field\Map                    map($latitude, $longitude, $label = '')
- * @method Field\Editor                 editor($column, $label = '')
- * @method Field\Date                   date($column, $label = '')
- * @method Field\Datetime               datetime($column, $label = '')
- * @method Field\Time                   time($column, $label = '')
- * @method Field\Year                   year($column, $label = '')
- * @method Field\Month                  month($column, $label = '')
- * @method Field\DateRange              dateRange($start, $end, $label = '')
- * @method Field\DateTimeRange          datetimeRange($start, $end, $label = '')
- * @method Field\TimeRange              timeRange($start, $end, $label = '')
- * @method Field\Number                 number($column, $label = '')
- * @method Field\Currency               currency($column, $label = '')
- * @method Field\SwitchField            switch ($column, $label = '')
- * @method Field\Display                display($column, $label = '')
- * @method Field\Rate                   rate($column, $label = '')
- * @method Field\Divide                 divider()
- * @method Field\Password               password($column, $label = '')
- * @method Field\Decimal                decimal($column, $label = '')
- * @method Field\Html                   html($html, $label = '')
- * @method Field\Tags                   tags($column, $label = '')
- * @method Field\Icon                   icon($column, $label = '')
- * @method Field\Embeds                 embeds($column, $label = '')
- * @method Field\Captcha                captcha()
- * @method Field\Listbox                listbox($column, $label = '')
- * @method Field\File                   file($column, $label = '')
- * @method Field\Image                  image($column, $label = '')
- * @method Field\MultipleFile           multipleFile($column, $label = '')
- * @method Field\MultipleImage          multipleImage($column, $label = '')
- * @method Field\HasMany                hasMany($column, $labelOrCallback, $callback = null)
- * @method Field\Tree                   tree($column, $label = '')
- * @method Field\Table                  table($column, $labelOrCallback, $callback = null)
- * @method Field\ListField              list($column, $label = '')
- * @method Field\Timezone               timezone($column, $label = '')
- * @method Field\KeyValue               keyValue($column, $label = '')
- * @method Field\Tel                    tel($column, $label = '')
- * @method Field\Markdown               markdown($column, $label = '')
- * @method Field\Range                  range($start, $end, $label = '')
+ * @method Field\Text text($column, $label = '')
+ * @method Field\Checkbox checkbox($column, $label = '')
+ * @method Field\Radio radio($column, $label = '')
+ * @method Field\Select select($column, $label = '')
+ * @method Field\MultipleSelect multipleSelect($column, $label = '')
+ * @method Field\Textarea textarea($column, $label = '')
+ * @method Field\Hidden hidden($column, $label = '')
+ * @method Field\Id id($column, $label = '')
+ * @method Field\Ip ip($column, $label = '')
+ * @method Field\Url url($column, $label = '')
+ * @method Field\Email email($column, $label = '')
+ * @method Field\Mobile mobile($column, $label = '')
+ * @method Field\Slider slider($column, $label = '')
+ * @method Field\Map map($latitude, $longitude, $label = '')
+ * @method Field\Editor editor($column, $label = '')
+ * @method Field\Date date($column, $label = '')
+ * @method Field\Datetime datetime($column, $label = '')
+ * @method Field\Time time($column, $label = '')
+ * @method Field\Year year($column, $label = '')
+ * @method Field\Month month($column, $label = '')
+ * @method Field\DateRange dateRange($start, $end, $label = '')
+ * @method Field\DateTimeRange datetimeRange($start, $end, $label = '')
+ * @method Field\TimeRange timeRange($start, $end, $label = '')
+ * @method Field\Number number($column, $label = '')
+ * @method Field\Currency currency($column, $label = '')
+ * @method Field\SwitchField switch ($column, $label = '')
+ * @method Field\Display display($column, $label = '')
+ * @method Field\Rate rate($column, $label = '')
+ * @method Field\Divide divider()
+ * @method Field\Password password($column, $label = '')
+ * @method Field\Decimal decimal($column, $label = '')
+ * @method Field\Html html($html, $label = '')
+ * @method Field\Tags tags($column, $label = '')
+ * @method Field\Icon icon($column, $label = '')
+ * @method Field\Embeds embeds($column, $label = '')
+ * @method Field\Captcha captcha()
+ * @method Field\Listbox listbox($column, $label = '')
+ * @method Field\File file($column, $label = '')
+ * @method Field\Image image($column, $label = '')
+ * @method Field\MultipleFile multipleFile($column, $label = '')
+ * @method Field\MultipleImage multipleImage($column, $label = '')
+ * @method Field\HasMany hasMany($column, $labelOrCallback, $callback = null)
+ * @method Field\Tree tree($column, $label = '')
+ * @method Field\Table table($column, $labelOrCallback, $callback = null)
+ * @method Field\ListField list($column, $label = '')
+ * @method Field\Timezone timezone($column, $label = '')
+ * @method Field\KeyValue keyValue($column, $label = '')
+ * @method Field\Tel tel($column, $label = '')
+ * @method Field\Markdown markdown($column, $label = '')
+ * @method Field\Range range($start, $end, $label = '')
  */
 class Row implements Renderable
 {
@@ -80,7 +80,7 @@ class Row implements Renderable
     /**
      * Fields in this row.
      *
-     * @var array
+     * @var Collection
      */
     protected $fields;
 
@@ -92,10 +92,15 @@ class Row implements Renderable
     protected $defaultFieldWidth = 12;
 
     /**
+     * @var bool
+     */
+    protected $horizontal = false;
+
+    /**
      * Row constructor.
      *
-     * @param \Closure        $callback
-     * @param Form|WidgetForm $form
+     * @param  \Closure  $callback
+     * @param  Form|WidgetForm  $form
      */
     public function __construct(\Closure $callback, $form)
     {
@@ -115,6 +120,21 @@ class Row implements Renderable
     public function fields()
     {
         return $this->fields;
+    }
+
+    /**
+     * If the form horizontal layout.
+     *
+     * @param  bool  $value
+     * @return $this
+     */
+    public function horizontal(bool $value = true)
+    {
+        $this->horizontal = $value;
+
+        $this->fields->each->horizontal($value);
+
+        return $this;
     }
 
     public function setFields(Collection $collection)
@@ -143,8 +163,7 @@ class Row implements Renderable
     /**
      * Set width for a incomming field.
      *
-     * @param int $width
-     *
+     * @param  int  $width
      * @return $this
      */
     public function width($width = 12)
@@ -167,16 +186,15 @@ class Row implements Renderable
     /**
      * Add field.
      *
-     * @param string $method
-     * @param array  $arguments
-     *
+     * @param  string  $method
+     * @param  array  $arguments
      * @return Field|void
      */
     public function __call($method, $arguments)
     {
         $field = $this->form->__call($method, $arguments);
 
-        $field->disableHorizontal();
+        $field->horizontal($this->horizontal);
 
         $this->fields->push([
             'width'   => $this->defaultFieldWidth,

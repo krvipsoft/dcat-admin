@@ -44,16 +44,17 @@ class DialogTree extends AbstractDisplayer
 
     protected $checkAll;
 
+    protected $rootParentId = 0;
+
     /**
-     * @param array $data exp:
-     *                    {
-     *                    "id": "1",
-     *                    "parent": "#",
-     *                    "text": "Dashboard",
-     *                    // "state": {"selected": true}
-     *                    }
-     * @param array $data
-     *
+     * @param  array  $data  exp:
+     *                       {
+     *                       "id": "1",
+     *                       "parent": "#",
+     *                       "text": "Dashboard",
+     *                       // "state": {"selected": true}
+     *                       }
+     * @param  array  $data
      * @return $this
      */
     public function nodes($data)
@@ -63,6 +64,13 @@ class DialogTree extends AbstractDisplayer
         }
 
         $this->nodes = &$data;
+
+        return $this;
+    }
+
+    public function rootParentId($id)
+    {
+        $this->rootParentId = $id;
 
         return $this;
     }
@@ -82,8 +90,7 @@ class DialogTree extends AbstractDisplayer
     }
 
     /**
-     * @param array $options
-     *
+     * @param  array  $options
      * @return $this
      */
     public function options($options = [])
@@ -105,9 +112,8 @@ class DialogTree extends AbstractDisplayer
     }
 
     /**
-     * @param string $width
-     * @param string $height
-     *
+     * @param  string  $width
+     * @param  string  $height
      * @return $this
      */
     public function area(string $width, string $height)
@@ -147,14 +153,15 @@ class DialogTree extends AbstractDisplayer
         }
 
         return Admin::view('admin::grid.displayer.dialogtree', [
-            'value'       => $this->format($this->value),
-            'nodes'       => $this->nodes,
-            'title'       => $this->title ?: $this->column->getLabel(),
-            'options'     => $this->options,
-            'area'        => $this->area,
-            'columnNames' => $this->columnNames,
-            'url'         => $this->url,
-            'checkAll'    => $this->checkAll,
+            'value'        => $this->format($this->value),
+            'nodes'        => $this->nodes,
+            'title'        => $this->title ?: $this->column->getLabel(),
+            'options'      => $this->options,
+            'area'         => $this->area,
+            'columnNames'  => $this->columnNames,
+            'url'          => $this->url,
+            'checkAll'     => $this->checkAll,
+            'rootParentId' => $this->rootParentId,
         ]);
     }
 

@@ -6,7 +6,6 @@ use Dcat\Admin\Form\Field;
 use Dcat\Admin\Support\Helper;
 use Dcat\Admin\Widgets\Checkbox as WidgetCheckbox;
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Support\Arr;
 
 class Tree extends Field
 {
@@ -22,6 +21,7 @@ class Tree extends Field
         ],
         'checkbox' => [
             'keep_selected_style' => false,
+            'three_state' => true,
         ],
         'types' => [
             'default'  => [
@@ -46,15 +46,16 @@ class Tree extends Field
 
     protected $readOnly = false;
 
+    protected $rootParentId = 0;
+
     /**
-     * @param array|Arrayable|\Closure $data exp:
-     *                                       {
-     *                                       "id": "1",
-     *                                       "parent": "#",
-     *                                       "text": "Dashboard",
-     *                                       // "state": {"selected": true}
-     *                                       }
-     *
+     * @param  array|Arrayable|\Closure  $data  exp:
+     *                                          {
+     *                                          "id": "1",
+     *                                          "parent": "#",
+     *                                          "text": "Dashboard",
+     *                                          // "state": {"selected": true}
+     *                                          }
      * @return $this
      */
     public function nodes($data)
@@ -69,15 +70,34 @@ class Tree extends Field
     }
 
     /**
+     * 设置父级复选框是否禁止被单独选中.
+     *
+     * @param  bool  $value
+     * @return $this
+     */
+    public function treeState(bool $value = true)
+    {
+        $this->options['checkbox']['three_state'] = $value;
+
+        return $this->exceptParentNode($value);
+    }
+
+    /**
      * 过滤父节点.
      *
-     * @param bool $value
-     *
+     * @param  bool  $value
      * @return $this
      */
     public function exceptParentNode(bool $value = true)
     {
         $this->exceptParents = $value;
+
+        return $this;
+    }
+
+    public function rootParentId($id)
+    {
+        $this->rootParentId = $id;
 
         return $this;
     }
@@ -139,7 +159,7 @@ class Tree extends Field
             }
 
             $parentId = $v[$parentColumn] ?? '#';
-            if (empty($parentId)) {
+            if (empty($parentId) || $parentId == $this->rootParentId) {
                 $parentId = '#';
             } else {
                 $parentIds[] = $parentId;
@@ -174,8 +194,7 @@ class Tree extends Field
     /**
      * Set type.
      *
-     * @param array $value
-     *
+     * @param  array  $value
      * @return $this
      */
     public function type(array $value)
@@ -188,8 +207,7 @@ class Tree extends Field
     /**
      * Set plugins.
      *
-     * @param array $value
-     *
+     * @param  array  $value
      * @return $this
      */
     public function plugins(array $value)
@@ -200,8 +218,7 @@ class Tree extends Field
     }
 
     /**
-     * @param bool $value
-     *
+     * @param  bool  $value
      * @return $this
      */
     public function expand(bool $value = true)
@@ -213,7 +230,7 @@ class Tree extends Field
 
     protected function formatFieldData($data)
     {
-        return Helper::array(Arr::get($data, $this->normalizeColumn()), true);
+        return Helper::array($this->getValueFromData($data), true);
     }
 
     protected function prepareInputValue($value)

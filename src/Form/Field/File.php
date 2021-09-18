@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Validator;
 
 class File extends Field implements UploadFieldInterface
 {
-    use WebUploader,
-        UploadField;
+    use WebUploader;
+    use UploadField;
 
     /**
      * @var array
@@ -120,7 +120,7 @@ class File extends Field implements UploadFieldInterface
 
     protected function formatFieldData($data)
     {
-        return Helper::array(Arr::get($data, $this->normalizeColumn()));
+        return Helper::array($this->getValueFromData($data));
     }
 
     /**
@@ -133,7 +133,7 @@ class File extends Field implements UploadFieldInterface
         foreach (Helper::array($this->value()) as $value) {
             $previews[] = [
                 'id'   => $value,
-                'path' => basename($value),
+                'path' => Helper::basename($value),
                 'url'  => $this->objectUrl($value),
             ];
         }
@@ -186,10 +186,9 @@ class File extends Field implements UploadFieldInterface
      *
      * @see http://fex.baidu.com/webuploader/doc/index.html#WebUploader_Uploader_events
      *
-     * @param string $event
-     * @param string $script
-     * @param bool   $once
-     *
+     * @param  string  $event
+     * @param  string  $script
+     * @param  bool  $once
      * @return $this
      */
     public function on(string $event, string $script, bool $once = false)
@@ -206,13 +205,26 @@ class File extends Field implements UploadFieldInterface
      *
      * @see http://fex.baidu.com/webuploader/doc/index.html#WebUploader_Uploader_events
      *
-     * @param string $event
-     * @param string $script
-     *
+     * @param  string  $event
+     * @param  string  $script
      * @return $this
      */
     public function once(string $event, string $script)
     {
         return $this->on($event, $script, true);
+    }
+
+    /**
+     * @param  Field  $field
+     * @param  string|array  $fieldRules
+     * @return void
+     */
+    public static function deleteRules(Field $field, &$fieldRules)
+    {
+        if ($field instanceof self) {
+            $fieldRules = is_string($fieldRules) ? explode('|', $fieldRules) : $fieldRules;
+
+            Helper::deleteContains($fieldRules, ['image', 'file', 'dimensions', 'size', 'max', 'min']);
+        }
     }
 }

@@ -3,15 +3,19 @@
 namespace Dcat\Admin\Grid\Displayers;
 
 use Dcat\Admin\Actions\Action;
-use Dcat\Admin\Form;
+use Dcat\Admin\Grid\Actions\Delete;
+use Dcat\Admin\Grid\Actions\Edit;
+use Dcat\Admin\Grid\Actions\QuickEdit;
+use Dcat\Admin\Grid\Actions\Show;
 use Dcat\Admin\Grid\RowAction;
 use Dcat\Admin\Support\Helper;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Contracts\Support\Renderable;
+use Illuminate\Support\Traits\Macroable;
 
 class Actions extends AbstractDisplayer
 {
-    protected static $resolvedDialog;
+    use Macroable;
 
     /**
      * @var array
@@ -43,8 +47,7 @@ class Actions extends AbstractDisplayer
     /**
      * Append a action.
      *
-     * @param string|Renderable|Action|Htmlable $action
-     *
+     * @param  string|Renderable|Action|Htmlable  $action
      * @return $this
      */
     public function append($action)
@@ -59,8 +62,7 @@ class Actions extends AbstractDisplayer
     /**
      * Prepend a action.
      *
-     * @param string|Renderable|Action|Htmlable $action
-     *
+     * @param  string|Renderable|Action|Htmlable  $action
      * @return $this
      */
     public function prepend($action)
@@ -73,9 +75,8 @@ class Actions extends AbstractDisplayer
     }
 
     /**
-     * @param mixed $action
-     *
-     * @return void
+     * @param  mixed  $action
+     * @return mixed
      */
     protected function prepareAction(&$action)
     {
@@ -84,65 +85,82 @@ class Actions extends AbstractDisplayer
                 ->setColumn($this->column)
                 ->setRow($this->row);
         }
+
+        return $action;
+    }
+
+    public function view(bool $value = true)
+    {
+        return $this->setAction('view', $value);
     }
 
     /**
      * Disable view action.
      *
-     * @param bool $disable
-     *
+     * @param  bool  $disable
      * @return $this
      */
     public function disableView(bool $disable = true)
     {
-        return $this->disableDefaultAction('view', $disable);
+        return $this->setAction('view', ! $disable);
+    }
+
+    public function delete(bool $value = true)
+    {
+        return $this->setAction('delete', $value);
     }
 
     /**
      * Disable delete.
      *
-     * @param bool $disable
-     *
+     * @param  bool  $disable
      * @return $this.
      */
     public function disableDelete(bool $disable = true)
     {
-        return $this->disableDefaultAction('delete', $disable);
+        return $this->setAction('delete', ! $disable);
+    }
+
+    public function edit(bool $value = true)
+    {
+        return $this->setAction('edit', $value);
     }
 
     /**
      * Disable edit.
      *
-     * @param bool $disable
-     *
+     * @param  bool  $disable
      * @return $this.
      */
     public function disableEdit(bool $disable = true)
     {
-        return $this->disableDefaultAction('edit', $disable);
+        return $this->setAction('edit', ! $disable);
+    }
+
+    public function quickEdit(bool $value = true)
+    {
+        return $this->setAction('quickEdit', $value);
     }
 
     /**
      * Disable quick edit.
      *
-     * @param bool $disable
-     *
+     * @param  bool  $disable
      * @return $this.
      */
     public function disableQuickEdit(bool $disable = true)
     {
-        return $this->disableDefaultAction('quickEdit', $disable);
+        return $this->setAction('quickEdit', ! $disable);
     }
 
     /**
-     * @param string $key
-     * @param bool $disable
-     *
+     * @param  string  $key
+     * @param  bool  $disable
      * @return $this
      */
-    protected function disableDefaultAction(string $key, bool $disable)
+    protected function setAction(string $key, bool $value)
     {
-        $this->actions[$key] = ! $disable;
+        $this->actions[$key] = $value;
 
         return $this;
     }
@@ -151,7 +169,6 @@ class Actions extends AbstractDisplayer
      * Set resource of current resource.
      *
      * @param $resource
-     *
      * @return $this
      */
     public function setResource($resource)
@@ -176,15 +193,14 @@ class Actions extends AbstractDisplayer
      */
     protected function resetDefaultActions()
     {
-        $this->disableView(! $this->grid->option('show_view_button'));
-        $this->disableEdit(! $this->grid->option('show_edit_button'));
-        $this->disableQuickEdit(! $this->grid->option('show_quick_edit_button'));
-        $this->disableDelete(! $this->grid->option('show_delete_button'));
+        $this->view($this->grid->option('view_button'));
+        $this->edit($this->grid->option('edit_button'));
+        $this->quickEdit($this->grid->option('quick_edit_button'));
+        $this->delete($this->grid->option('delete_button'));
     }
 
     /**
-     * @param array $callbacks
-     *
+     * @param  array  $callbacks
      * @return void
      */
     protected function call(array $callbacks = [])
@@ -227,13 +243,20 @@ class Actions extends AbstractDisplayer
      */
     protected function renderView()
     {
+        $action = config('admin.grid.actions.view') ?: Show::class;
+        $action = $action::make($this->getViewLabel());
+
+        return $this->prepareAction($action);
+    }
+
+    /**
+     * @return string
+     */
+    protected function getViewLabel()
+    {
         $label = trans('admin.show');
 
-        return <<<EOT
-<a href="{$this->resource()}/{$this->getKey()}" title="{$label}">
-    <i class="feather icon-eye grid-action-icon"></i>
-</a>&nbsp;
-EOT;
+        return "<i title='{$label}' class=\"feather icon-eye grid-action-icon\"></i> &nbsp;";
     }
 
     /**
@@ -243,13 +266,20 @@ EOT;
      */
     protected function renderEdit()
     {
+        $action = config('admin.grid.actions.edit') ?: Edit::class;
+        $action = $action::make($this->getEditLabel());
+
+        return $this->prepareAction($action);
+    }
+
+    /**
+     * @return string
+     */
+    protected function getEditLabel()
+    {
         $label = trans('admin.edit');
 
-        return <<<EOT
-<a href="{$this->resource()}/{$this->getKey()}/edit" title="{$label}">
-    <i class="feather icon-edit-1 grid-action-icon"></i>
-</a>&nbsp;
-EOT;
+        return "<i title='{$label}' class=\"feather icon-edit-1 grid-action-icon\"></i> &nbsp;";
     }
 
     /**
@@ -257,24 +287,20 @@ EOT;
      */
     protected function renderQuickEdit()
     {
-        if (! static::$resolvedDialog) {
-            static::$resolvedDialog = true;
+        $action = config('admin.grid.actions.quick_edit') ?: QuickEdit::class;
+        $action = $action::make($this->getQuickEditLabel());
 
-            [$width, $height] = $this->grid->option('dialog_form_area');
+        return $this->prepareAction($action);
+    }
 
-            Form::dialog(trans('admin.edit'))
-                ->click(".{$this->grid->getRowName()}-edit")
-                ->dimensions($width, $height)
-                ->success('Dcat.reload()');
-        }
-
+    /**
+     * @return string
+     */
+    protected function getQuickEditLabel()
+    {
         $label = trans('admin.quick_edit');
 
-        return <<<EOF
-<a title="{$label}" class="{$this->grid->getRowName()}-edit" data-url="{$this->resource()}/{$this->getKey()}/edit" href="javascript:void(0);">
-    <i class="feather icon-edit grid-action-icon"></i>
-</a>&nbsp;
-EOF;
+        return "<i title='{$label}' class=\"feather icon-edit grid-action-icon\"></i> &nbsp;";
     }
 
     /**
@@ -284,12 +310,19 @@ EOF;
      */
     protected function renderDelete()
     {
+        $action = config('admin.grid.actions.delete') ?: Delete::class;
+        $action = $action::make($this->getDeleteLabel());
+
+        return $this->prepareAction($action);
+    }
+
+    /**
+     * @return string
+     */
+    protected function getDeleteLabel()
+    {
         $label = trans('admin.delete');
 
-        return <<<EOT
-<a title="{$label}" href="javascript:void(0);" data-message="ID - {$this->getKey()}" data-url="{$this->resource()}/{$this->getKey()}" data-action="delete">
-    <i class="feather icon-trash grid-action-icon"></i>
-</a>&nbsp;
-EOT;
+        return "<i class=\"feather icon-trash grid-action-icon\" title='{$label}'></i> &nbsp;";
     }
 }

@@ -1,5 +1,5 @@
 <div class="input-group input-group-sm">
-    <select style="width: 100%;" class="grid-column-select" data-url="{{ $url }}" data-name="{{ $column }}">
+    <select style="width: 100%;" class="grid-column-select" data-reload="{{ $refresh }}" data-url="{{ $url }}" data-name="{{ $column }}">
         @foreach($options as $k => $v)
             @php($selected = Dcat\Admin\Support\Helper::equal($k, $value)  ? 'selected' : '')
 
@@ -9,13 +9,13 @@
     </select>
 </div>
 
-<script require="@select2">
+<script require="@select2?lang={{ config('app.locale') === 'en' ? '' : str_replace('_', '-', config('app.locale')) }}">
     $('.grid-column-select').off('change').select2().on('change', function(){
         var value = $(this).val(),
             name = $(this).data('name'),
             url = $(this).data('url'),
             data = {},
-            reload = '{{ $refresh }}';
+            reload = $(this).data('reload');
 
         if (name.indexOf('.') === -1) {
             data[name] = value;
@@ -32,8 +32,12 @@
             data: data,
             success: function (d) {
                 Dcat.NP.done();
-                Dcat.success(d.data.message || d.message);
-                reload && Dcat.reload();
+                if (d.status) {
+                    Dcat.success(d.data.message);
+                    reload && Dcat.reload();
+                } else {
+                    Dcat.error(d.data.message);
+                }
             }
         });
     });

@@ -27,6 +27,13 @@ class AdminController extends Controller
     ];
 
     /**
+     * Set translation path.
+     *
+     * @var string
+     */
+    protected $translation;
+
+    /**
      * Get content title.
      *
      * @return string
@@ -47,15 +54,25 @@ class AdminController extends Controller
     }
 
     /**
+     * Get translation path.
+     *
+     * @return string
+     */
+    protected function translation()
+    {
+        return $this->translation;
+    }
+
+    /**
      * Index interface.
      *
-     * @param Content $content
-     *
+     * @param  Content  $content
      * @return Content
      */
     public function index(Content $content)
     {
         return $content
+            ->translation($this->translation())
             ->title($this->title())
             ->description($this->description()['index'] ?? trans('admin.list'))
             ->body($this->grid());
@@ -64,14 +81,14 @@ class AdminController extends Controller
     /**
      * Show interface.
      *
-     * @param mixed   $id
-     * @param Content $content
-     *
+     * @param  mixed  $id
+     * @param  Content  $content
      * @return Content
      */
     public function show($id, Content $content)
     {
         return $content
+            ->translation($this->translation())
             ->title($this->title())
             ->description($this->description()['show'] ?? trans('admin.show'))
             ->body($this->detail($id));
@@ -80,14 +97,14 @@ class AdminController extends Controller
     /**
      * Edit interface.
      *
-     * @param mixed   $id
-     * @param Content $content
-     *
+     * @param  mixed  $id
+     * @param  Content  $content
      * @return Content
      */
     public function edit($id, Content $content)
     {
         return $content
+            ->translation($this->translation())
             ->title($this->title())
             ->description($this->description()['edit'] ?? trans('admin.edit'))
             ->body($this->form()->edit($id));
@@ -96,13 +113,13 @@ class AdminController extends Controller
     /**
      * Create interface.
      *
-     * @param Content $content
-     *
+     * @param  Content  $content
      * @return Content
      */
     public function create(Content $content)
     {
         return $content
+            ->translation($this->translation())
             ->title($this->title())
             ->description($this->description()['create'] ?? trans('admin.create'))
             ->body($this->form());
@@ -111,8 +128,7 @@ class AdminController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param int $id
-     *
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function update($id)
@@ -133,8 +149,7 @@ class AdminController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param int $id
-     *
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)

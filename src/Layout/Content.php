@@ -7,7 +7,6 @@ use Dcat\Admin\Admin;
 use Dcat\Admin\Exception\RuntimeException;
 use Dcat\Admin\Traits\HasBuilderEvents;
 use Illuminate\Contracts\Support\Renderable;
-use Illuminate\Support\Str;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\ViewErrorBag;
 
@@ -59,7 +58,7 @@ class Content implements Renderable
     /**
      * Content constructor.
      *
-     * @param Closure|null $callback
+     * @param  Closure|null  $callback
      */
     public function __construct(\Closure $callback = null)
     {
@@ -73,8 +72,7 @@ class Content implements Renderable
     /**
      * Create a content instance.
      *
-     * @param mixed ...$params
-     *
+     * @param  mixed  ...$params
      * @return $this
      */
     public static function make(...$params)
@@ -83,8 +81,7 @@ class Content implements Renderable
     }
 
     /**
-     * @param string $header
-     *
+     * @param  string  $header
      * @return $this
      */
     public function header($header = '')
@@ -95,8 +92,7 @@ class Content implements Renderable
     /**
      * Set title of content.
      *
-     * @param string $title
-     *
+     * @param  string  $title
      * @return $this
      */
     public function title($title)
@@ -109,13 +105,25 @@ class Content implements Renderable
     /**
      * Set description of content.
      *
-     * @param string $description
-     *
+     * @param  string  $description
      * @return $this
      */
     public function description($description = '')
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * 设置翻译文件路径.
+     *
+     * @param  string|null  $translation
+     * @return $this
+     */
+    public function translation(?string $translation)
+    {
+        Admin::translation($translation);
 
         return $this;
     }
@@ -139,8 +147,7 @@ class Content implements Renderable
      *         ['text' => 'Menu', 'url' => 'auth/menu', 'icon' => 'fa fa-align-justify']
      *     ]);
      *
-     * @param array ...$breadcrumb
-     *
+     * @param  array  ...$breadcrumb
      * @return $this
      */
     public function breadcrumb(...$breadcrumb)
@@ -153,11 +160,10 @@ class Content implements Renderable
     }
 
     /**
-     * @param array $breadcrumb
+     * @param  array  $breadcrumb
+     * @return void
      *
      * @throws \Exception
-     *
-     * @return void
      */
     protected function formatBreadcrumb(array &$breadcrumb)
     {
@@ -192,8 +198,7 @@ class Content implements Renderable
     /**
      * Alias of method row.
      *
-     * @param mixed $content
-     *
+     * @param  mixed  $content
      * @return Content
      */
     public function body($content)
@@ -205,7 +210,6 @@ class Content implements Renderable
      * Add one row for content body.
      *
      * @param $content
-     *
      * @return $this
      */
     public function row($content)
@@ -223,7 +227,6 @@ class Content implements Renderable
 
     /**
      * @param $content
-     *
      * @return $this
      */
     public function prepend($content)
@@ -247,7 +250,7 @@ class Content implements Renderable
     /**
      * Add Row.
      *
-     * @param Row $row
+     * @param  Row  $row
      */
     protected function addRow(Row $row)
     {
@@ -275,8 +278,7 @@ class Content implements Renderable
     }
 
     /**
-     * @param \Throwable $e
-     *
+     * @param  \Throwable  $e
      * @return mixed|string
      */
     protected function handleException(\Throwable $e)
@@ -295,9 +297,8 @@ class Content implements Renderable
     /**
      * Set success message for content.
      *
-     * @param string $title
-     * @param string $message
-     *
+     * @param  string  $title
+     * @param  string  $message
      * @return $this
      */
     public function withSuccess($title = '', $message = '')
@@ -310,9 +311,8 @@ class Content implements Renderable
     /**
      * Set error message for content.
      *
-     * @param string $title
-     * @param string $message
-     *
+     * @param  string  $title
+     * @param  string  $message
      * @return $this
      */
     public function withError($title = '', $message = '')
@@ -325,9 +325,8 @@ class Content implements Renderable
     /**
      * Set warning message for content.
      *
-     * @param string $title
-     * @param string $message
-     *
+     * @param  string  $title
+     * @param  string  $message
      * @return $this
      */
     public function withWarning($title = '', $message = '')
@@ -340,9 +339,8 @@ class Content implements Renderable
     /**
      * Set info message for content.
      *
-     * @param string $title
-     * @param string $message
-     *
+     * @param  string  $title
+     * @param  string  $message
      * @return $this
      */
     public function withInfo($title = '', $message = '')
@@ -355,8 +353,7 @@ class Content implements Renderable
     /**
      * Set content view.
      *
-     * @param null|string $view
-     *
+     * @param  null|string  $view
      * @return $this
      */
     public function view(?string $view)
@@ -367,9 +364,8 @@ class Content implements Renderable
     }
 
     /**
-     * @param string|array $key
-     * @param mixed $value
-     *
+     * @param  string|array  $key
+     * @param  mixed  $value
      * @return $this
      */
     public function with($key, $value = null)
@@ -384,9 +380,8 @@ class Content implements Renderable
     }
 
     /**
-     * @param string|array $key
-     * @param mixed $value
-     *
+     * @param  string|array  $key
+     * @param  mixed  $value
      * @return $this
      */
     public function withConfig($key, $value = null)
@@ -437,7 +432,8 @@ class Content implements Renderable
             'navbar_color'      => '',
             'navbar_class'      => 'sticky',
             'footer_type'       => '',
-            'body_class'        => '',
+            'body_class'        => [],
+            'horizontal_menu'   => false,
         ];
 
         $data = array_merge(
@@ -445,19 +441,15 @@ class Content implements Renderable
             $this->config
         );
 
-        // 1.0 版本兼容 sidebar_dark 参数
-        if (empty($data['sidebar_style']) && ! empty($data['sidebar_dark'])) {
-            $data['sidebar_style'] = 'sidebar-dark-white';
-        }
-
         $allOptions = [
             'theme'             => '',
             'footer_type'       => '',
-            'body_class'        => '',
+            'body_class'        => [],
             'sidebar_style'     => ['light' => 'sidebar-light-primary', 'primary' => 'sidebar-primary', 'dark' => 'sidebar-dark-white'],
             'sidebar_collapsed' => [],
             'navbar_color'      => [],
             'navbar_class'      => ['floating' => 'floating-nav', 'sticky' => 'fixed-top', 'hidden' => 'd-none'],
+            'horizontal_menu'   => [],
         ];
 
         $maps = [
@@ -487,8 +479,16 @@ class Content implements Renderable
             }
         }
 
-        if ($data['body_class'] && Str::contains($data['body_class'], 'dark-mode')) {
+        if (! is_array($data['body_class'])) {
+            $data['body_class'] = explode(' ', (string) $data['body_class']);
+        }
+
+        if ($data['body_class'] && in_array('dark-mode', $data['body_class'], true)) {
             $data['sidebar_style'] = 'sidebar-dark-white';
+        }
+
+        if ($data['horizontal_menu']) {
+            $data['body_class'][] = 'horizontal-menu';
         }
 
         return [
@@ -497,8 +497,9 @@ class Content implements Renderable
             'navbar_color'      => $data['navbar_color'],
             'navbar_class'      => $allOptions['navbar_class'][$data['navbar_class']],
             'sidebar_class'     => $data['sidebar_collapsed'] ? 'sidebar-collapse' : '',
-            'body_class'        => $data['body_class'],
+            'body_class'        => implode(' ', $data['body_class']),
             'sidebar_style'     => $data['sidebar_style'],
+            'horizontal_menu'   => $data['horizontal_menu'],
         ];
     }
 
@@ -516,14 +517,18 @@ class Content implements Renderable
 
         $this->callComposed();
 
+        if (Admin::shouldPrevent()) {
+            return Admin::renderContents();
+        }
+
         return view($this->view, $this->variables())->render();
     }
 
     /**
      * Register a composed event.
      *
-     * @param callable $callback
-     * @param bool     $once
+     * @param  callable  $callback
+     * @param  bool  $once
      */
     public static function composed(callable $callback, bool $once = false)
     {
@@ -533,7 +538,7 @@ class Content implements Renderable
     /**
      * Call the composed callbacks.
      *
-     * @param array ...$params
+     * @param  array  ...$params
      */
     protected function callComposed(...$params)
     {

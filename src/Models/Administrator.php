@@ -29,17 +29,22 @@ class Administrator extends Model implements AuthenticatableContract
     /**
      * Create a new Eloquent model instance.
      *
-     * @param array $attributes
+     * @param  array  $attributes
      */
     public function __construct(array $attributes = [])
+    {
+        $this->init();
+
+        parent::__construct($attributes);
+    }
+
+    protected function init()
     {
         $connection = config('admin.database.connection') ?: config('database.default');
 
         $this->setConnection($connection);
 
         $this->setTable(config('admin.database.users_table'));
-
-        parent::__construct($attributes);
     }
 
     /**
@@ -79,8 +84,7 @@ class Administrator extends Model implements AuthenticatableContract
     /**
      * 判断是否允许查看菜单.
      *
-     * @param array|Menu $menu
-     *
+     * @param  array|Menu  $menu
      * @return bool
      */
     public function canSeeMenu($menu)

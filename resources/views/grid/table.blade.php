@@ -9,7 +9,7 @@
 
     {!! $grid->renderHeader() !!}
 
-    <div class="table-responsive {{ $grid->option('table_collapse') ? 'table-collapse' : '' }} table-wrapper complex-container table-middle mt-1">
+    <div class="{!! $grid->formatTableParentClass() !!}">
         <table class="{{ $grid->formatTableClass() }}" id="{{ $tableId }}" >
             <thead>
             @if ($headers = $grid->getVisibleComplexHeaders())
@@ -34,9 +34,7 @@
             @foreach($grid->rows() as $row)
                 <tr {!! $row->rowAttributes() !!}>
                     @foreach($grid->getVisibleColumnNames() as $name)
-                        <td {!! $row->columnAttributes($name) !!}>
-                            {!! $row->column($name) !!}
-                        </td>
+                        <td {!! $row->columnAttributes($name) !!}>{!! $row->column($name) !!}</td>
                     @endforeach
                 </tr>
             @endforeach
@@ -53,8 +51,6 @@
 
     {!! $grid->renderFooter() !!}
 
-    @include('admin::grid.table-pagination')
+    {!! $grid->renderPagination() !!}
 
 </div>
-
-

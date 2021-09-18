@@ -16,20 +16,12 @@ trait HasActions
     protected $actionsCallback = [];
 
     /**
-     * Actions column display class.
-     *
-     * @var string
-     */
-    protected $actionsClass;
-
-    /**
-     * @param string $actionClass
-     *
+     * @param  string  $actionClass
      * @return $this
      */
     public function setActionClass(string $actionClass)
     {
-        $this->actionsClass = $actionClass;
+        $this->options['actions_class'] = $actionClass;
 
         return $this;
     }
@@ -41,8 +33,8 @@ trait HasActions
      */
     public function getActionClass()
     {
-        if ($this->actionsClass) {
-            return $this->actionsClass;
+        if ($this->options['actions_class']) {
+            return $this->options['actions_class'];
         }
 
         if ($class = config('admin.grid.grid_action_class')) {
@@ -55,8 +47,7 @@ trait HasActions
     /**
      * Set grid action callback or add actions.
      *
-     * @param Closure|array|string|Renderable|Grid\RowAction $callback
-     *
+     * @param  Closure|array|string|Renderable|Grid\RowAction  $callback
      * @return $this
      */
     public function actions($callback)
@@ -87,7 +78,7 @@ trait HasActions
      */
     protected function appendActionsColumn()
     {
-        if (! $this->options['show_actions']) {
+        if (! $this->options['actions']) {
             return;
         }
 
@@ -106,7 +97,7 @@ trait HasActions
      */
     public function disableActions(bool $disable = true)
     {
-        return $this->option('show_actions', ! $disable);
+        return $this->option('actions', ! $disable);
     }
 
     /**
@@ -122,13 +113,12 @@ trait HasActions
     /**
      * Disable edit.
      *
-     * @param bool $disable
-     *
+     * @param  bool  $disable
      * @return $this
      */
     public function disableEditButton(bool $disable = true)
     {
-        $this->options['show_edit_button'] = ! $disable;
+        $this->options['edit_button'] = ! $disable;
 
         return $this;
     }
@@ -136,8 +126,7 @@ trait HasActions
     /**
      * Show edit.
      *
-     * @param bool $val
-     *
+     * @param  bool  $val
      * @return $this
      */
     public function showEditButton(bool $val = true)
@@ -152,7 +141,7 @@ trait HasActions
      */
     public function disableQuickEditButton(bool $disable = true)
     {
-        $this->options['show_quick_edit_button'] = ! $disable;
+        $this->options['quick_edit_button'] = ! $disable;
 
         return $this;
     }
@@ -170,13 +159,12 @@ trait HasActions
     /**
      * Disable view action.
      *
-     * @param bool $disable
-     *
+     * @param  bool  $disable
      * @return $this
      */
     public function disableViewButton(bool $disable = true)
     {
-        $this->options['show_view_button'] = ! $disable;
+        $this->options['view_button'] = ! $disable;
 
         return $this;
     }
@@ -184,8 +172,7 @@ trait HasActions
     /**
      * Show view action.
      *
-     * @param bool $disable
-     *
+     * @param  bool  $disable
      * @return $this
      */
     public function showViewButton(bool $val = true)
@@ -196,13 +183,12 @@ trait HasActions
     /**
      * Disable delete.
      *
-     * @param bool $disable
-     *
+     * @param  bool  $disable
      * @return $this
      */
     public function disableDeleteButton(bool $disable = true)
     {
-        $this->options['show_delete_button'] = ! $disable;
+        $this->options['delete_button'] = ! $disable;
 
         return $this;
     }
@@ -210,8 +196,7 @@ trait HasActions
     /**
      * Show delete button.
      *
-     * @param bool $disable
-     *
+     * @param  bool  $disable
      * @return $this
      */
     public function showDeleteButton(bool $val = true)

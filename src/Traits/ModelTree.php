@@ -15,7 +15,8 @@ use Spatie\EloquentSortable\SortableTrait;
  * @property string $parentColumn
  * @property string $titleColumn
  * @property string $orderColumn
- * @property array  $sortable
+ * @property string $defaultParentId
+ * @property array $sortable
  */
 trait ModelTree
 {
@@ -60,10 +61,17 @@ trait ModelTree
     }
 
     /**
+     * @return string
+     */
+    public function getDefaultParentId()
+    {
+        return isset($this->defaultParentId) ? $this->defaultParentId : '0';
+    }
+
+    /**
      * Set query callback to model.
      *
-     * @param \Closure|null $query
-     *
+     * @param  \Closure|null  $query
      * @return $this
      */
     public function withQuery(\Closure $query = null)
@@ -86,7 +94,7 @@ trait ModelTree
 
         return Helper::buildNestedArray(
             $nodes,
-            0,
+            $this->getDefaultParentId(),
             $this->getKeyName(),
             $this->getParentColumn()
         );
@@ -105,8 +113,7 @@ trait ModelTree
     }
 
     /**
-     * @param $this $model
-     *
+     * @param  $this  $model
      * @return $this|Builder
      */
     protected function callQueryCallbacks($model)
@@ -123,8 +130,7 @@ trait ModelTree
     /**
      * Set the order of branches in the tree.
      *
-     * @param array $order
-     *
+     * @param  array  $order
      * @return void
      */
     protected static function setBranchOrder(array $order)
@@ -139,8 +145,8 @@ trait ModelTree
     /**
      * Save tree order from a tree like array.
      *
-     * @param array $tree
-     * @param int   $parentId
+     * @param  array  $tree
+     * @param  int  $parentId
      */
     public static function saveOrder($tree = [], $parentId = 0)
     {
@@ -264,9 +270,8 @@ trait ModelTree
     /**
      * Get options for Select field in form.
      *
-     * @param \Closure|null $closure
-     * @param string        $rootText
-     *
+     * @param  \Closure|null  $closure
+     * @param  string  $rootText
      * @return array
      */
     public static function selectOptions(\Closure $closure = null, $rootText = null)
@@ -281,11 +286,10 @@ trait ModelTree
     /**
      * Build options of select field in form.
      *
-     * @param array  $nodes
-     * @param int    $parentId
-     * @param string $prefix
-     * @param string $space
-     *
+     * @param  array  $nodes
+     * @param  int  $parentId
+     * @param  string  $prefix
+     * @param  string  $space
      * @return array
      */
     protected function buildSelectOptions(array $nodes = [], $parentId = 0, $prefix = '', $space = '&nbsp;')
@@ -332,16 +336,6 @@ trait ModelTree
     /**
      * {@inheritdoc}
      */
-    public function delete()
-    {
-        $this->where($this->getParentColumn(), $this->getKey())->delete();
-
-        return parent::delete();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     protected static function boot()
     {
         parent::boot();
@@ -370,6 +364,14 @@ trait ModelTree
             }
 
             return $branch;
+        });
+
+        static::deleting(function ($model) {
+            static::query()
+                ->where($model->getParentColumn(), $model->getKey())
+                ->get()
+                ->each
+                ->delete();
         });
     }
 }

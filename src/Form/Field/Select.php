@@ -7,11 +7,12 @@ use Dcat\Admin\Form\Field;
 use Dcat\Admin\Support\Helper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 
 class Select extends Field
 {
     use CanCascadeFields;
+    use CanLoadFields;
+    use Sizeable;
 
     protected $cascadeEvent = 'change';
 
@@ -28,8 +29,7 @@ class Select extends Field
     /**
      * Set options.
      *
-     * @param array|\Closure|string $options
-     *
+     * @param  array|\Closure|string  $options
      * @return $this|mixed
      */
     public function options($options = [])
@@ -56,7 +56,7 @@ class Select extends Field
     }
 
     /**
-     * @param array $groups
+     * @param  array  $groups
      */
 
     /**
@@ -73,8 +73,7 @@ class Select extends Field
      *        ...
      *     ]
      *
-     * @param array $groups
-     *
+     * @param  array  $groups
      * @return $this
      */
     public function groups(array $groups)
@@ -85,66 +84,11 @@ class Select extends Field
     }
 
     /**
-     * Load options for other select on change.
-     *
-     * @param string $field
-     * @param string $sourceUrl
-     * @param string $idField
-     * @param string $textField
-     *
-     * @return $this
-     */
-    public function load($field, $sourceUrl, string $idField = 'id', string $textField = 'text')
-    {
-        if (Str::contains($field, '.')) {
-            $field = $this->formatName($field);
-        }
-
-        $class = $this->normalizeElementClass($field);
-
-        $url = admin_url($sourceUrl);
-
-        return $this->addVariables(['load' => compact('url', 'class', 'idField', 'textField')]);
-    }
-
-    /**
-     * Load options for other selects on change.
-     *
-     * @param string $fields
-     * @param string $sourceUrls
-     * @param string $idField
-     * @param string $textField
-     *
-     * @return $this
-     */
-    public function loads($fields = [], $sourceUrls = [], string $idField = 'id', string $textField = 'text')
-    {
-        $fieldsStr = implode('^', array_map(function ($field) {
-            if (Str::contains($field, '.')) {
-                return $this->normalizeElementClass($field).'_';
-            }
-
-            return $this->normalizeElementClass($field);
-        }, (array) $fields));
-        $urlsStr = implode('^', array_map(function ($url) {
-            return admin_url($url);
-        }, (array) $sourceUrls));
-
-        return $this->addVariables(['loads' => [
-            'fields'    => $fieldsStr,
-            'urls'      => $urlsStr,
-            'idField'   => $idField,
-            'textField' => $textField,
-        ]]);
-    }
-
-    /**
      * Load options from current selected resource(s).
      *
-     * @param string $model
-     * @param string $idField
-     * @param string $textField
-     *
+     * @param  string  $model
+     * @param  string  $idField
+     * @param  string  $textField
      * @return $this
      */
     public function model($model, string $idField = 'id', string $textField = 'name')
@@ -172,7 +116,7 @@ class Select extends Field
                 $resources[] = $value;
             }
 
-            return $model::find($resources)->pluck($textField, $idField)->toArray();
+            return $model::whereIn($idField, $resources)->pluck($textField, $idField)->toArray();
         };
 
         return $this;
@@ -181,10 +125,9 @@ class Select extends Field
     /**
      * Load options from remote.
      *
-     * @param string $url
-     * @param array  $parameters
-     * @param array  $options
-     *
+     * @param  string  $url
+     * @param  array  $parameters
+     * @param  array  $options
      * @return $this
      */
     protected function loadRemoteOptions(string $url, array $parameters = [], array $options = [])
@@ -199,9 +142,8 @@ class Select extends Field
     }
 
     /**
-     * @param string|array $key
-     * @param mixed        $value
-     *
+     * @param  string|array  $key
+     * @param  mixed  $value
      * @return $this
      */
     public function addDefaultConfig($key, $value = null)
@@ -224,10 +166,9 @@ class Select extends Field
     /**
      * Load options from ajax results.
      *
-     * @param string $url
+     * @param  string  $url
      * @param $idField
      * @param $textField
-     *
      * @return $this
      */
     public function ajax(string $url, string $idField = 'id', string $textField = 'text')
@@ -246,9 +187,8 @@ class Select extends Field
      *
      * all configurations see https://select2.org/configuration/options-api
      *
-     * @param string $key
-     * @param mixed  $val
-     *
+     * @param  string  $key
+     * @param  mixed  $val
      * @return $this
      */
     public function config(string $key, $val)
@@ -289,6 +229,8 @@ class Select extends Field
             'configs'       => $this->config,
             'cascadeScript' => $this->getCascadeScript(),
         ]);
+
+        $this->initSize();
 
         $this->attribute('data-value', implode(',', Helper::array($this->value())));
 

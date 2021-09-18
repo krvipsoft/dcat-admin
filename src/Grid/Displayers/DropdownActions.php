@@ -2,28 +2,16 @@
 
 namespace Dcat\Admin\Grid\Displayers;
 
-use Dcat\Admin\Grid\Actions\Delete;
-use Dcat\Admin\Grid\Actions\Edit;
-use Dcat\Admin\Grid\Actions\QuickEdit;
-use Dcat\Admin\Grid\Actions\Show;
 use Dcat\Admin\Support\Helper;
 
 class DropdownActions extends Actions
 {
-    /**
-     * @var array
-     */
-    protected $default = [];
+    protected $view = 'admin::grid.dropdown-actions';
 
     /**
      * @var array
      */
-    protected $defaultActions = [
-        'view'      => Show::class,
-        'edit'      => Edit::class,
-        'quickEdit' => QuickEdit::class,
-        'delete'    => Delete::class,
-    ];
+    protected $default = [];
 
     public function prepend($action)
     {
@@ -31,20 +19,18 @@ class DropdownActions extends Actions
     }
 
     /**
-     * @param mixed $action
-     *
-     * @return void
+     * @param  mixed  $action
+     * @return mixed
      */
     protected function prepareAction(&$action)
     {
         parent::prepareAction($action);
 
-        $action = $this->wrapCustomAction($action);
+        return $action = $this->wrapCustomAction($action);
     }
 
     /**
-     * @param mixed $action
-     *
+     * @param  mixed  $action
      * @return string
      */
     protected function wrapCustomAction($action)
@@ -68,17 +54,12 @@ class DropdownActions extends Actions
                 continue;
             }
 
-            $action = new $this->defaultActions[$action]();
-
-            $this->prepareAction($action);
-
-            array_push($this->default, $action);
+            array_push($this->default, $this->{'render'.ucfirst($action)}());
         }
     }
 
     /**
-     * @param \Closure[] $callback
-     *
+     * @param  \Closure[]  $callback
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function display(array $callbacks = [])
@@ -95,6 +76,22 @@ class DropdownActions extends Actions
             'selector' => ".{$this->grid->getRowName()}-checkbox",
         ];
 
-        return view('admin::grid.dropdown-actions', $actions);
+        return view($this->view, $actions);
+    }
+
+    protected function getViewLabel()
+    {
+    }
+
+    protected function getEditLabel()
+    {
+    }
+
+    protected function getQuickEditLabel()
+    {
+    }
+
+    protected function getDeleteLabel()
+    {
     }
 }

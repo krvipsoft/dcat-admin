@@ -27,7 +27,7 @@ class ColumnSelector extends AbstractTool
     /**
      * Create a new Export button instance.
      *
-     * @param Grid $grid
+     * @param  Grid  $grid
      */
     public function __construct(Grid $grid)
     {
@@ -44,20 +44,12 @@ class ColumnSelector extends AbstractTool
         $show = $this->getVisibleColumnNames();
         $all = $this->getGridColumns();
 
+        $visibleColumnNames = $this->grid->getVisibleColumnsFromQuery();
+
         $list = Checkbox::make()
             ->class('column-select-item')
             ->options($all)
-            ->check(
-                $this->getGridColumns()->filter(function ($label, $key) use ($show) {
-                    if (empty($show)) {
-                        return true;
-                    }
-
-                    return in_array($key, $show) ? true : false;
-                }
-            )
-            ->keys()
-        );
+            ->check($visibleColumnNames);
 
         $selectAll = Checkbox::make('_all_', [1 => trans('admin.all')])->check(
             $all->count() === count($show) ? 1 : null
@@ -65,7 +57,7 @@ class ColumnSelector extends AbstractTool
 
         return Admin::view('admin::grid.column-selector', [
             'checkbox'   => $list,
-            'defaults'   => $this->grid->getDefaultVisibleColumnNames(),
+            'defaults'   => $visibleColumnNames,
             'selectAll'  => $selectAll,
             'columnName' => $this->grid->getColumnSelectorQueryName(),
         ]);
@@ -114,8 +106,7 @@ class ColumnSelector extends AbstractTool
     /**
      * Is column ignored in column selector.
      *
-     * @param string $name
-     *
+     * @param  string  $name
      * @return bool
      */
     protected function isColumnIgnored($name)
@@ -126,8 +117,7 @@ class ColumnSelector extends AbstractTool
     /**
      * Ignore a column to display in column selector.
      *
-     * @param string|array $name
-     *
+     * @param  string|array  $name
      * @return $this
      */
     public function ignore($name)

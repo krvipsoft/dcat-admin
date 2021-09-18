@@ -52,8 +52,8 @@ class NestedForm extends WidgetForm
      *
      * NestedForm constructor.
      *
-     * @param string $relation
-     * @param null   $key
+     * @param  string  $relation
+     * @param  null  $key
      */
     public function __construct($relation = null, $key = null)
     {
@@ -72,8 +72,7 @@ class NestedForm extends WidgetForm
     /**
      * Set Form.
      *
-     * @param Form|WidgetForm $form
-     *
+     * @param  Form|WidgetForm  $form
      * @return $this
      */
     public function setForm($form = null)
@@ -101,9 +100,8 @@ class NestedForm extends WidgetForm
     /**
      * Set original values for fields.
      *
-     * @param array  $data
-     * @param string $relatedKeyName
-     *
+     * @param  array  $data
+     * @param  string  $relatedKeyName
      * @return $this
      */
     public function setOriginal($data, $relatedKeyName)
@@ -129,8 +127,7 @@ class NestedForm extends WidgetForm
     /**
      * Prepare for insert or update.
      *
-     * @param array $input
-     *
+     * @param  array  $input
      * @return mixed
      */
     public function prepare($input)
@@ -149,6 +146,14 @@ class NestedForm extends WidgetForm
     }
 
     /**
+     * @return mixed
+     */
+    public function getParentKey()
+    {
+        return $this->form->getKey();
+    }
+
+    /**
      * Get key for current form.
      *
      * @return string
@@ -161,8 +166,7 @@ class NestedForm extends WidgetForm
     /**
      * Set key for current form.
      *
-     * @param mixed $key
-     *
+     * @param  mixed  $key
      * @return $this
      */
     public function setKey($key)
@@ -175,14 +179,13 @@ class NestedForm extends WidgetForm
     /**
      * Set original data for each field.
      *
-     * @param string $key
-     *
+     * @param  string  $key
      * @return void
      */
     protected function setFieldOriginalValue($key)
     {
         $values = [];
-        if (array_key_exists($key, $this->original)) {
+        if (Helper::keyExists($key, $this->original)) {
             $values = $this->original[$key];
         }
         $this->fields->each(function (Field $field) use ($values) {
@@ -193,8 +196,7 @@ class NestedForm extends WidgetForm
     /**
      * Do prepare work before store and update.
      *
-     * @param array $record
-     *
+     * @param  array  $record
      * @return array
      */
     protected function prepareRecord($record)
@@ -238,9 +240,8 @@ class NestedForm extends WidgetForm
     /**
      * Fetch value in input data by column name.
      *
-     * @param array        $data
-     * @param string|array $columns
-     *
+     * @param  array  $data
+     * @param  string|array  $columns
      * @return array|mixed
      */
     protected function fetchColumnValue($data, $columns)
@@ -284,9 +285,11 @@ class NestedForm extends WidgetForm
 
         $field->attribute(Field::BUILD_IGNORE, true);
 
-        if (method_exists($this->form, 'builder')) {
+        if ($this->form && method_exists($this->form, 'builder')) {
             $this->form->builder()->pushField((clone $field)->display(false));
         }
+
+        $this->callResolvingFieldCallbacks($field);
 
         $field->setRelation([
             'relation' => $this->relationName,
@@ -325,8 +328,7 @@ class NestedForm extends WidgetForm
     /**
      * Fill data to all fields in form.
      *
-     * @param array $data
-     *
+     * @param  array  $data
      * @return $this
      */
     public function fill($data)
@@ -342,8 +344,7 @@ class NestedForm extends WidgetForm
     /**
      * Set `errorKey` `elementName` `elementClass` for fields inside hasmany fields.
      *
-     * @param Field $field
-     *
+     * @param  Field  $field
      * @return Field
      */
     protected function formatField(Field $field)
@@ -386,9 +387,8 @@ class NestedForm extends WidgetForm
     /**
      * Add nested-form fields dynamically.
      *
-     * @param string $method
-     * @param array  $arguments
-     *
+     * @param  string  $method
+     * @param  array  $arguments
      * @return mixed
      */
     public function __call($method, $arguments)

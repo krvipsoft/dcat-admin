@@ -28,7 +28,7 @@ class Bootstrap
         if (
             config('admin.layout.dark_mode_switch')
             && ! Helper::isAjaxRequest()
-            && ! request()->routeIs(admin_api_route('*'))
+            && ! request()->routeIs(admin_api_route_name('*'))
         ) {
             Admin::navbar()->right((new DarkModeSwitcher())->render());
         }
@@ -56,7 +56,6 @@ class Bootstrap
 
     /**
      * @param  \Illuminate\Http\Request
-     *
      * @return void
      */
     protected function storeCurrentUrl(Request $request)
@@ -76,8 +75,7 @@ class Bootstrap
     }
 
     /**
-     * @param  \Illuminate\Http\Request $request
-     *
+     * @param  \Illuminate\Http\Request  $request
      * @return bool
      */
     public function prefetch($request)

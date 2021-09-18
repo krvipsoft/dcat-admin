@@ -70,6 +70,13 @@ class Condition
         }
     }
 
+    public function end()
+    {
+        return $this->if(function () {
+            return true;
+        });
+    }
+
     protected function callCallbacks(array $callbacks)
     {
         if (! $callbacks) {
@@ -97,7 +104,13 @@ class Condition
 
     protected function copy()
     {
-        return clone $this->original;
+        $column = clone $this->original;
+
+        $column->setOriginalModel($this->column->getOriginalModel());
+        $column->setOriginal($this->column->getOriginal());
+        $column->setValue($this->column->getValue());
+
+        return $column;
     }
 
     public function is()

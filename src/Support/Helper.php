@@ -2,7 +2,6 @@
 
 namespace Dcat\Admin\Support;
 
-use Dcat\Admin\Admin;
 use Dcat\Admin\Grid;
 use Dcat\Laravel\Database\WhereHasInServiceProvider;
 use Illuminate\Contracts\Support\Arrayable;
@@ -34,17 +33,18 @@ class Helper
         'video'      => 'mkv|rmvb|flv|mp4|avi|wmv|rm|asf|mpeg',
     ];
 
+    protected static $controllerNames = [];
+
     /**
      * 把给定的值转化为数组.
      *
      * @param $value
-     * @param bool $filter
-     *
+     * @param  bool  $filter
      * @return array
      */
     public static function array($value, bool $filter = true): array
     {
-        if (! $value) {
+        if ($value === null || $value === '' || $value === []) {
             return [];
         }
 
@@ -78,10 +78,9 @@ class Helper
     /**
      * 把给定的值转化为字符串.
      *
-     * @param string|Grid|\Closure|Renderable|Htmlable  $value
-     * @param array                                     $params
-     * @param object                                    $newThis
-     *
+     * @param  string|Grid|\Closure|Renderable|Htmlable  $value
+     * @param  array  $params
+     * @param  object  $newThis
      * @return string
      */
     public static function render($value, $params = [], $newThis = null): string
@@ -96,10 +95,6 @@ class Helper
             $value = $value(...(array) $params);
         }
 
-        if ($value instanceof Grid) {
-            return (string) $value->render();
-        }
-
         if ($value instanceof Renderable) {
             return (string) $value->render();
         }
@@ -112,8 +107,31 @@ class Helper
     }
 
     /**
-     * @param array $attributes
+     * 获取当前控制器名称.
      *
+     * @return mixed|string
+     */
+    public static function getControllerName()
+    {
+        $router = app('router');
+
+        if (! $router->current()) {
+            return 'undefined';
+        }
+
+        $actionName = $router->current()->getActionName();
+
+        if (! isset(static::$controllerNames[$actionName])) {
+            $controller = class_basename(explode('@', $actionName)[0]);
+
+            static::$controllerNames[$actionName] = str_replace('Controller', '', $controller);
+        }
+
+        return static::$controllerNames[$actionName];
+    }
+
+    /**
+     * @param  array  $attributes
      * @return string
      */
     public static function buildHtmlAttributes($attributes)
@@ -132,7 +150,7 @@ class Helper
             $element = '';
 
             if ($value !== null) {
-                $element = $key.'="'.htmlentities($value, ENT_QUOTES, 'UTF-8').'"';
+                $element = $key.'="'.htmlentities($value, ENT_QUOTES, 'UTF-8').'" ';
             }
 
             $html .= $element;
@@ -142,9 +160,8 @@ class Helper
     }
 
     /**
-     * @param string $url
-     * @param array  $query
-     *
+     * @param  string  $url
+     * @param  array  $query
      * @return string
      */
     public static function urlWithQuery(?string $url, array $query = [])
@@ -163,9 +180,8 @@ class Helper
     }
 
     /**
-     * @param string                 $url
-     * @param string|array|Arrayable $keys
-     *
+     * @param  string  $url
+     * @param  string|array|Arrayable  $keys
      * @return string
      */
     public static function urlWithoutQuery($url, $keys)
@@ -194,8 +210,7 @@ class Helper
     }
 
     /**
-     * @param Arrayable|array|string $keys
-     *
+     * @param  Arrayable|array|string  $keys
      * @return string
      */
     public static function fullUrlWithoutQuery($keys)
@@ -204,9 +219,8 @@ class Helper
     }
 
     /**
-     * @param string       $url
-     * @param string|array $keys
-     *
+     * @param  string  $url
+     * @param  string|array  $keys
      * @return bool
      */
     public static function urlHasQuery(string $url, $keys)
@@ -237,9 +251,8 @@ class Helper
      *      Helper::matchRequestPath(admin_base_path('auth/user/* /edit'))
      *      Helper::matchRequestPath('GET,POST:auth/user')
      *
-     * @param string      $path
-     * @param null|string $current
-     *
+     * @param  string  $path
+     * @param  null|string  $current
      * @return bool
      */
     public static function matchRequestPath($path, ?string $current = null)
@@ -258,7 +271,7 @@ class Helper
         }
 
         // 判断路由名称
-        if ($request->routeIs($path)) {
+        if ($request->routeIs($path) || $request->routeIs(admin_route_name($path))) {
             return true;
         }
 
@@ -274,12 +287,11 @@ class Helper
     /**
      * 生成层级数据.
      *
-     * @param array       $nodes
-     * @param int         $parentId
-     * @param string|null $primaryKeyName
-     * @param string|null $parentKeyName
-     * @param string|null $childrenKeyName
-     *
+     * @param  array  $nodes
+     * @param  int  $parentId
+     * @param  string|null  $primaryKeyName
+     * @param  string|null  $parentKeyName
+     * @param  string|null  $childrenKeyName
      * @return array
      */
     public static function buildNestedArray(
@@ -320,9 +332,8 @@ class Helper
     }
 
     /**
-     * @param string $name
-     * @param string $symbol
-     *
+     * @param  string  $name
+     * @param  string  $symbol
      * @return mixed
      */
     public static function slug(string $name, string $symbol = '-')
@@ -335,9 +346,8 @@ class Helper
     }
 
     /**
-     * @param array $array
-     * @param int   $level
-     *
+     * @param  array  $array
+     * @param  int  $level
      * @return string
      */
     public static function exportArray(array &$array, $level = 1)
@@ -377,8 +387,7 @@ class Helper
     }
 
     /**
-     * @param array $array
-     *
+     * @param  array  $array
      * @return string
      */
     public static function exportArrayPhp(array $array)
@@ -389,16 +398,34 @@ class Helper
     /**
      * 删除数组中的元素.
      *
-     * @param array $array
-     * @param mixed $value
+     * @param  array  $array
+     * @param  mixed  $value
+     * @param  bool  $strict
      */
-    public static function deleteByValue(&$array, $value)
+    public static function deleteByValue(&$array, $value, bool $strict = false)
     {
         $value = (array) $value;
 
         foreach ($array as $index => $item) {
-            if (in_array($item, $value)) {
+            if (in_array($item, $value, $strict)) {
                 unset($array[$index]);
+            }
+        }
+    }
+
+    /**
+     * @param  array  $array
+     * @param  mixed  $value
+     */
+    public static function deleteContains(&$array, $value)
+    {
+        $value = (array) $value;
+
+        foreach ($array as $index => $item) {
+            foreach ($value as  $v) {
+                if (Str::contains($item, $v)) {
+                    unset($array[$index]);
+                }
             }
         }
     }
@@ -406,9 +433,8 @@ class Helper
     /**
      * 颜色转亮.
      *
-     * @param string $color
-     * @param int    $amt
-     *
+     * @param  string  $color
+     * @param  int  $amt
      * @return string
      */
     public static function colorLighten(string $color, int $amt)
@@ -433,9 +459,8 @@ class Helper
     /**
      * 颜色转暗.
      *
-     * @param string $color
-     * @param int    $amt
-     *
+     * @param  string  $color
+     * @param  int  $amt
      * @return string
      */
     public static function colorDarken(string $color, int $amt)
@@ -446,9 +471,8 @@ class Helper
     /**
      * 颜色透明度.
      *
-     * @param string       $color
-     * @param float|string $alpha
-     *
+     * @param  string  $color
+     * @param  float|string  $alpha
      * @return string
      */
     public static function colorAlpha(string $color, $alpha)
@@ -467,9 +491,8 @@ class Helper
     }
 
     /**
-     * @param string $color
-     * @param int    $amt
-     *
+     * @param  string  $color
+     * @param  int  $amt
      * @return array
      */
     public static function colorToRBG(string $color, int $amt = 0)
@@ -497,8 +520,7 @@ class Helper
     /**
      * 验证扩展包名称.
      *
-     * @param string $name
-     *
+     * @param  string  $name
      * @return int
      */
     public static function validateExtensionName($name)
@@ -509,8 +531,7 @@ class Helper
     /**
      * Get file icon.
      *
-     * @param string $file
-     *
+     * @param  string  $file
      * @return string
      */
     public static function getFileIcon($file = '')
@@ -529,8 +550,7 @@ class Helper
     /**
      * 判断是否是ajax请求.
      *
-     * @param Request $request
-     *
+     * @param  Request  $request
      * @return bool
      */
     public static function isAjaxRequest(?Request $request = null)
@@ -562,8 +582,7 @@ class Helper
     }
 
     /**
-     * @param string $url
-     *
+     * @param  string  $url
      * @return void
      */
     public static function setPreviousUrl($url)
@@ -580,11 +599,10 @@ class Helper
     }
 
     /**
-     * @param mixed $command
-     * @param int   $timeout
-     * @param null  $input
-     * @param null  $cwd
-     *
+     * @param  mixed  $command
+     * @param  int  $timeout
+     * @param  null  $input
+     * @param  null  $cwd
      * @return Process
      */
     public static function process($command, $timeout = 100, $input = null, $cwd = null)
@@ -607,7 +625,6 @@ class Helper
      *
      * @param $value1
      * @param $value2
-     *
      * @return bool
      */
     public static function equal($value1, $value2)
@@ -626,9 +643,8 @@ class Helper
     /**
      * 判断给定的数组是是否包含给定元素.
      *
-     * @param mixed $value
-     * @param array $array
-     *
+     * @param  mixed  $value
+     * @param  array  $array
      * @return bool
      */
     public static function inArray($value, array $array)
@@ -647,9 +663,9 @@ class Helper
     /**
      * Limit the number of characters in a string.
      *
-     * @param string $value
-     * @param int $limit
-     * @param string $end
+     * @param  string  $value
+     * @param  int  $limit
+     * @param  string  $end
      * @return string
      */
     public static function strLimit($value, $limit = 100, $end = '...')
@@ -664,8 +680,7 @@ class Helper
     /**
      * 获取类名或对象的文件路径.
      *
-     * @param string|object $class
-     *
+     * @param  string|object  $class
      * @return string
      *
      * @throws \ReflectionException
@@ -719,8 +734,8 @@ class Helper
     /**
      * Is input data is has-one relation.
      *
-     * @param Collection $fields
-     * @param array      $input
+     * @param  Collection  $fields
+     * @param  array  $input
      */
     public static function prepareHasOneRelation(Collection $fields, array &$input)
     {
@@ -761,11 +776,10 @@ class Helper
     /**
      * 设置查询条件.
      *
-     * @param mixed $model
-     * @param string $column
-     * @param string $query
+     * @param  mixed  $model
+     * @param  string  $column
+     * @param  string  $query
      * @param mixed array $params
-     *
      * @return void
      */
     public static function withQueryCondition($model, ?string $column, string $query, array $params)
@@ -787,36 +801,38 @@ class Helper
     /**
      * 设置关联关系查询条件.
      *
-     * @param mixed $model
-     * @param string $column
-     * @param string $query
-     * @param mixed ...$params
-     *
+     * @param  mixed  $model
+     * @param  string  $column
+     * @param  string  $query
+     * @param  mixed  ...$params
      * @return void
      */
     public static function withRelationQuery($model, ?string $column, string $query, array $params)
     {
         $column = explode('.', $column);
 
-        array_unshift($params, array_pop($column));
+        $relColumn = array_pop($column);
 
         // 增加对whereHasIn的支持
         $method = class_exists(WhereHasInServiceProvider::class) ? 'whereHasIn' : 'whereHas';
 
-        $model->$method(implode('.', $column), function ($relation) use ($params, $query) {
-            $relation->$query(...$params);
+        $model->$method(implode('.', $column), function ($relation) use ($relColumn, $params, $query) {
+            $table = $relation->getModel()->getTable();
+            $relation->$query("{$table}.{$relColumn}", ...$params);
         });
     }
 
     /**
      * Html转义.
      *
-     * @param array|string $item
-     *
+     * @param  array|string  $item
      * @return mixed
      */
     public static function htmlEntityEncode($item)
     {
+        if (is_object($item)) {
+            return $item;
+        }
         if (is_array($item)) {
             array_walk_recursive($item, function (&$value) {
                 $value = htmlentities($value);
@@ -831,8 +847,7 @@ class Helper
     /**
      * 格式化表单元素 name 属性.
      *
-     * @param string|array $name
-     *
+     * @param  string|array  $name
      * @return mixed|string
      */
     public static function formatElementName($name)
@@ -870,7 +885,7 @@ class Helper
      *
      * @param  array|\ArrayAccess  $array
      * @param  string  $key
-     * @param  mixed   $value
+     * @param  mixed  $value
      * @return array
      */
     public static function arraySet(&$array, $key, $value)
@@ -905,5 +920,53 @@ class Helper
         $array[array_shift($keys)] = $value;
 
         return $array;
+    }
+
+    /**
+     * 把下划线风格字段名转化为驼峰风格.
+     *
+     * @param  array  $array
+     * @return array
+     */
+    public static function camelArray(array &$array)
+    {
+        foreach ($array as $k => $v) {
+            if (is_array($v)) {
+                Helper::camelArray($v);
+            }
+
+            $array[Str::camel($k)] = $v;
+        }
+
+        return $array;
+    }
+
+    /**
+     * 获取文件名称.
+     *
+     * @param  string  $name
+     * @return array|mixed
+     */
+    public static function basename($name)
+    {
+        if (! $name) {
+            return $name;
+        }
+
+        return last(explode('/', $name));
+    }
+
+    /**
+     * @param  string|int  $key
+     * @param  array|object  $arrayOrObject
+     * @return bool
+     */
+    public static function keyExists($key, $arrayOrObject)
+    {
+        if (is_object($arrayOrObject)) {
+            $arrayOrObject = static::array($arrayOrObject, false);
+        }
+
+        return array_key_exists($key, $arrayOrObject);
     }
 }

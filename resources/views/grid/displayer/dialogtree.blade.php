@@ -6,8 +6,10 @@
     <i class='feather icon-align-right'></i> {{ trans('admin.view') }}
 </a>
 
-<template id="dialog-tree-tpl">
-    <div class="jstree-wrapper p-1" style="border:0"><div class="da-tree" style="margin-top:10px"></div></div>
+<template>
+    <template id="dialog-tree-tpl">
+        <div class="jstree-wrapper p-1" style="border:0"><div class="da-tree" style="margin-top:10px"></div></div>
+    </template>
 </template>
 
 <script require="@jstree" once>
@@ -68,17 +70,15 @@
             var idColumn = options.columns.id,
                 textColumn = options.columns.text,
                 parentColumn = options.columns.parent,
-                parentIds = [], nodes = [], i, v, parentId;
+                nodes = [], i, v, parentId;
 
             for (i in all) {
                 v = all[i];
                 if (!v[idColumn]) continue;
 
                 parentId = v[parentColumn] || '#';
-                if (!parentId) {
+                if (!parentId || parentId == options.rootParentId || parentId == '0') {
                     parentId = '#';
-                } else {
-                    parentIds.push(parentId);
                 }
 
                 v['state'] = {'disabled': true};
@@ -106,6 +106,6 @@
     var area = {!! json_encode($area) !!};
 
     $('.grid-dialog-tree').off('click').on('click', function () {
-        resolveDialogTree.call(this, {config: options, nodes: nodes, area: area, columns: {!! json_encode($columnNames) !!}});
+        resolveDialogTree.call(this, {config: options, nodes: nodes, area: area, rootParentId: '{!! $rootParentId !!}', columns: {!! json_encode($columnNames) !!}});
     });
 </script>
