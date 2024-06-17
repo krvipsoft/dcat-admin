@@ -92,6 +92,11 @@ class Tree implements Renderable
     /**
      * @var bool
      */
+    public $expand = true;
+
+    /**
+     * @var bool
+     */
     public $useQuickCreate = true;
 
     /**
@@ -139,7 +144,7 @@ class Tree implements Renderable
     /**
      * Menu constructor.
      *
-     * @param Model|TreeRepository|string|null $model
+     * @param  Model|TreeRepository|string|null  $model
      */
     public function __construct($repository = null, ?\Closure $callback = null)
     {
@@ -168,7 +173,6 @@ class Tree implements Renderable
 
     /**
      * @param $repository
-     *
      * @return TreeRepository
      */
     public function makeRepository($repository)
@@ -210,8 +214,7 @@ class Tree implements Renderable
     /**
      * Set branch callback.
      *
-     * @param \Closure $branchCallback
-     *
+     * @param  \Closure  $branchCallback
      * @return $this
      */
     public function branch(\Closure $branchCallback)
@@ -238,8 +241,7 @@ class Tree implements Renderable
      *
      * @see https://github.com/dbushell/Nestable
      *
-     * @param int $max
-     *
+     * @param  int  $max
      * @return $this
      */
     public function maxDepth(int $max)
@@ -250,8 +252,7 @@ class Tree implements Renderable
     /**
      * Set nestable options.
      *
-     * @param array $options
-     *
+     * @param  array  $options
      * @return $this
      */
     public function nestable($options = [])
@@ -262,10 +263,18 @@ class Tree implements Renderable
     }
 
     /**
+     * @param  bool  $value
+     * @return void
+     */
+    public function expand(bool $value = true)
+    {
+        $this->expand = $value;
+    }
+
+    /**
      * Disable create.
      *
-     * @param bool $value
-     *
+     * @param  bool  $value
      * @return void
      */
     public function disableCreateButton(bool $value = true)
@@ -273,15 +282,24 @@ class Tree implements Renderable
         $this->useCreate = ! $value;
     }
 
+    public function showCreateButton(bool $value = true)
+    {
+        return $this->disableCreateButton(! $value);
+    }
+
     public function disableQuickCreateButton(bool $value = true)
     {
         $this->useQuickCreate = ! $value;
     }
 
+    public function showQuickCreateButton(bool $value = true)
+    {
+        return $this->disableQuickCreateButton(! $value);
+    }
+
     /**
-     * @param string $width
-     * @param string $height
-     *
+     * @param  string  $width
+     * @param  string  $height
      * @return $this
      */
     public function setDialogFormDimensions(string $width, string $height)
@@ -294,8 +312,7 @@ class Tree implements Renderable
     /**
      * Disable save.
      *
-     * @param bool $value
-     *
+     * @param  bool  $value
      * @return void
      */
     public function disableSaveButton(bool $value = true)
@@ -303,16 +320,25 @@ class Tree implements Renderable
         $this->useSave = ! $value;
     }
 
+    public function showSaveButton(bool $value = true)
+    {
+        return $this->disableSaveButton(! $value);
+    }
+
     /**
      * Disable refresh.
      *
-     * @param bool $value
-     *
+     * @param  bool  $value
      * @return void
      */
     public function disableRefreshButton(bool $value = true)
     {
         $this->useRefresh = ! $value;
+    }
+
+    public function showRefreshButton(bool $value = true)
+    {
+        return $this->disableRefreshButton(! $value);
     }
 
     public function disableQuickEditButton(bool $value = true)
@@ -322,11 +348,21 @@ class Tree implements Renderable
         });
     }
 
+    public function showQuickEditButton(bool $value = true)
+    {
+        return $this->disableQuickEditButton(! $value);
+    }
+
     public function disableEditButton(bool $value = true)
     {
         $this->actions(function (Actions $actions) use ($value) {
             $actions->disableEdit($value);
         });
+    }
+
+    public function showEditButton(bool $value = true)
+    {
+        return $this->disableEditButton(! $value);
     }
 
     public function disableDeleteButton(bool $value = true)
@@ -336,9 +372,13 @@ class Tree implements Renderable
         });
     }
 
+    public function showDeleteButton(bool $value = true)
+    {
+        return $this->disableDeleteButton(! $value);
+    }
+
     /**
-     * @param Closure $closure
-     *
+     * @param  Closure  $closure
      * @return $this;
      */
     public function wrap(\Closure $closure)
@@ -359,8 +399,7 @@ class Tree implements Renderable
     /**
      * Save tree order from a input.
      *
-     * @param string $serialize
-     *
+     * @param  string  $serialize
      * @return bool
      */
     public function saveOrder($serialize)
@@ -379,8 +418,7 @@ class Tree implements Renderable
     /**
      * Set view of tree.
      *
-     * @param string $view
-     *
+     * @param  string  $view
      * @return $this
      */
     public function view($view)
@@ -391,8 +429,7 @@ class Tree implements Renderable
     }
 
     /**
-     * @param string $view
-     *
+     * @param  string  $view
      * @return $this
      */
     public function branchView($view)
@@ -431,8 +468,7 @@ class Tree implements Renderable
     /**
      * 自定义行操作类.
      *
-     * @param string $actionClass
-     *
+     * @param  string  $actionClass
      * @return $this
      */
     public function setActionClass(string $actionClass)
@@ -445,8 +481,7 @@ class Tree implements Renderable
     /**
      * 设置行操作回调.
      *
-     * @param \Closure|array $callback
-     *
+     * @param  \Closure|array  $callback
      * @return $this
      */
     public function actions($callback)
@@ -471,7 +506,7 @@ class Tree implements Renderable
     /**
      * Return all items of the tree.
      *
-     * @param array $items
+     * @param  array  $items
      */
     public function getItems()
     {
@@ -497,6 +532,7 @@ class Tree implements Renderable
             'nestableOptions' => $this->nestableOptions,
             'url'             => $this->url,
             'resolveAction'   => $this->resolveAction(),
+            'expand'          => $this->expand,
         ];
     }
 
@@ -519,8 +555,7 @@ class Tree implements Renderable
     /**
      * Set resource path.
      *
-     * @param string $path
-     *
+     * @param  string  $path
      * @return $this
      */
     public function setResource($path)
@@ -533,8 +568,7 @@ class Tree implements Renderable
     /**
      * Setup tools.
      *
-     * @param Closure|array|AbstractTool|Renderable|Htmlable|string $callback
-     *
+     * @param  Closure|array|AbstractTool|Renderable|Htmlable|string  $callback
      * @return $this|Tools
      */
     public function tools($callback = null)
@@ -652,8 +686,7 @@ class Tree implements Renderable
     /**
      * Create a tree instance.
      *
-     * @param mixed ...$param
-     *
+     * @param  mixed  ...$param
      * @return $this
      */
     public static function make(...$param)

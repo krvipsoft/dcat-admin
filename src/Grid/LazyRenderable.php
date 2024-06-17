@@ -8,6 +8,10 @@ use Dcat\Admin\Support\LazyRenderable as Renderable;
 
 abstract class LazyRenderable extends Renderable
 {
+    const SIMPLE_NAME = '_simple_';
+
+    const ROW_SELECTOR_COLUMN_NAME = '_row_columns_';
+
     /**
      * 是否启用简化模式.
      *
@@ -44,18 +48,16 @@ HTML;
     /**
      * 是否启用简化模式.
      *
-     * @param bool $value
-     *
+     * @param  bool  $value
      * @return $this
      */
     public function simple(bool $value = true)
     {
-        return $this->payload(['_simple_' => $value]);
+        return $this->payload([static::SIMPLE_NAME => $value]);
     }
 
     /**
-     * @param Grid $grid
-     *
+     * @param  Grid  $grid
      * @return Grid
      */
     protected function prepare(Grid $grid)
@@ -72,12 +74,20 @@ HTML;
 
             $grid->filter()
                 ->panel()
-                ->view('admin::filter.tile-container');
+                ->view('admin::filter.simple-container');
 
             $grid->rowSelector()->click();
         }
 
-        return $grid;
+        if (! empty($this->payload[static::ROW_SELECTOR_COLUMN_NAME])) {
+            [$key, $visibleColumn] = $this->payload[static::ROW_SELECTOR_COLUMN_NAME];
+
+            $key && $grid->rowSelector()->idColumn($key);
+
+            $visibleColumn && $grid->rowSelector()->titleColumn($visibleColumn);
+        }
+
+        return $grid->async(false);
     }
 
     /**

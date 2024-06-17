@@ -39,20 +39,21 @@ export default class Ajax {
 
         $.post = function (options) {
             options.type = 'POST';
+            Object.assign(options.data, {_token: Dcat.token});
 
             return $.ajax(options);
         };
 
         $.delete = function (options) {
             options.type = 'POST';
-            options.data = {_method: 'DELETE'};
+            options.data = {_method: 'DELETE', _token: Dcat.token};
 
             return $.ajax(options);
         };
 
         $.put = function (options) {
             options.type = 'POST';
-            Object.assign(options.data, {_method: 'PUT'});
+            Object.assign(options.data, {_method: 'PUT', _token: Dcat.token});
 
             return $.ajax(options);
         };
@@ -73,10 +74,17 @@ export default class Ajax {
             case 403:
                 return Dcat.error(_msg || (Dcat.lang['403'] || 'Permission deny!'));
             case 401:
-                if (json.login) {
-                    return location.href = json.login;
+                if (json.redirect) {
+                    return location.href = json.redirect;
                 }
                 return Dcat.error(Dcat.lang['401'] || 'Unauthorized.');
+            case 301:
+            case 302:
+                console.log('admin redirect', json);
+                if (json.redirect) {
+                    return location.href = json.redirect;
+                }
+                return;
             case 419:
                 return Dcat.error(Dcat.lang['419'] || 'Sorry, your page has expired.');
 
@@ -91,6 +99,8 @@ export default class Ajax {
                     } catch (e) {}
                     return;
                 }
+             case 0:
+                return;
         }
 
         Dcat.error(_msg || (xhr.status + ' ' + msg));

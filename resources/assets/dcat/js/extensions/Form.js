@@ -72,6 +72,7 @@ class Form {
         _this.removeErrors();
 
         $form.ajaxSubmit({
+            data: {_token: Dcat.token},
             beforeSubmit: function (fields, form, _opt) {
                 if (options.before(fields, form, _opt, _this) === false) {
                     return false;
@@ -140,6 +141,11 @@ class Form {
                         key;
 
                     if (response.status != 422 || ! error || ! Dcat.helpers.isset(error, 'errors')) {
+                        let json = response.responseJSON;
+                        if (json && json.message) {
+                            return Dcat.error(json.message);
+                        }
+
                         return Dcat.error(response.status + ' ' + response.statusText);
                     }
                     error = error.errors;

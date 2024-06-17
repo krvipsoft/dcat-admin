@@ -108,7 +108,7 @@ class Color
      *
      * @var array
      */
-    protected static $colors = [
+    protected static $allColors = [
         'info'    => 'blue',
         'success' => 'green',
         'danger'  => 'red',
@@ -197,7 +197,7 @@ class Color
     /**
      * @var array
      */
-    protected $currentColors = [];
+    protected $colors = [];
 
     /**
      * @var array
@@ -205,34 +205,35 @@ class Color
     protected $realColors;
 
     /**
-     * Color constructor.
+     * 获取主题色名称.
      *
-     * @param string $name
-     */
-    public function __construct(?string $name = null)
-    {
-        $this->name = ($name ?: config('admin.layout.color')) ?: static::DEFAULT_COLOR;
-
-        $this->currentColors = array_merge(
-            static::$colors,
-            static::$extensions[$this->name]['colors'] ?? []
-        );
-    }
-
-    /**
      * @return string
      */
     public function getName()
     {
+        if (! $this->name) {
+            $this->name = config('admin.layout.color') ?: static::DEFAULT_COLOR;
+        }
+
         return $this->name;
+    }
+
+    /**
+     * 设置主题色名称.
+     *
+     * @param  string  $name
+     * @return void
+     */
+    public function setName(string $name)
+    {
+        $this->name = $name;
     }
 
     /**
      * 获取颜色.
      *
-     * @param string $colorName
-     * @param string $default
-     *
+     * @param  string  $colorName
+     * @param  string  $default
      * @return string
      */
     public function get(?string $colorName, ?string $default = null)
@@ -241,9 +242,11 @@ class Color
             return $this->realColors[$colorName] ?? $default;
         }
 
-        $result = $this->currentColors[$colorName] ?? $default;
+        $colors = $this->getColors();
 
-        if ($result && ! empty($this->currentColors[$result])) {
+        $result = $colors[$colorName] ?? $default;
+
+        if ($result && ! empty($colors[$result])) {
             return $this->get($result, $default);
         }
 
@@ -258,11 +261,13 @@ class Color
     public function all()
     {
         if ($this->realColors === null) {
-            foreach ($this->currentColors as $key => &$color) {
+            $colors = $this->getColors();
+
+            foreach ($colors as $key => &$color) {
                 $color = $this->get($key);
             }
 
-            $this->realColors = &$this->currentColors;
+            $this->realColors = &$colors;
         }
 
         return $this->realColors;
@@ -271,9 +276,8 @@ class Color
     /**
      * 颜色转亮.
      *
-     * @param string $color
-     * @param int    $amt
-     *
+     * @param  string  $color
+     * @param  int  $amt
      * @return string
      */
     public function lighten(?string $color, int $amt)
@@ -284,9 +288,8 @@ class Color
     /**
      * 颜色转暗.
      *
-     * @param string $color
-     * @param int    $amt
-     *
+     * @param  string  $color
+     * @param  int  $amt
      * @return string
      */
     public function darken(string $color, int $amt)
@@ -297,9 +300,8 @@ class Color
     /**
      * 颜色透明度转化.
      *
-     * @param string       $color
-     * @param float|string $alpha
-     *
+     * @param  string  $color
+     * @param  float|string  $alpha
      * @return string
      */
     public function alpha(?string $color, $alpha)
@@ -308,11 +310,25 @@ class Color
     }
 
     /**
+     * @return array
+     */
+    protected function getColors()
+    {
+        if (! $this->colors) {
+            $this->colors = array_merge(
+                static::$allColors,
+                static::$extensions[$this->getName()]['colors'] ?? []
+            );
+        }
+
+        return $this->colors;
+    }
+
+    /**
      * 获取颜色.
      *
-     * @param string $method
-     * @param array $arguments
-     *
+     * @param  string  $method
+     * @param  array  $arguments
      * @return string
      */
     public function __call(string $method, array $arguments = [])
@@ -326,9 +342,8 @@ class Color
     /**
      * 扩展颜色.
      *
-     * @param string $name
-     * @param array  $colors
-     *
+     * @param  string  $name
+     * @param  array  $colors
      * @return void
      */
     public static function extend(string $name, array $colors)

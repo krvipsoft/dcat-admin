@@ -56,6 +56,7 @@ class UserController extends AdminController
             $grid->showQuickEditButton();
             $grid->enableDialogCreate();
             $grid->showColumnSelector();
+            $grid->disableEditButton();
 
             $grid->actions(function (Grid\Displayers\Actions $actions) {
                 if ($actions->getKey() == AdministratorModel::DEFAULT_ID) {
@@ -172,7 +173,7 @@ class UserController extends AdminController
                 $form->disableDeleteButton();
             }
         })->saving(function (Form $form) {
-            if ($form->password && $form->model()->get('password') != $form->password) {
+            if ($form->password && $form->model()->password != $form->password) {
                 $form->password = bcrypt($form->password);
             }
 

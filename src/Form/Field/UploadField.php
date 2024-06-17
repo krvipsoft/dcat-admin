@@ -2,6 +2,7 @@
 
 namespace Dcat\Admin\Form\Field;
 
+use Dcat\Admin\Exception\UploadException;
 use Dcat\Admin\Traits\HasUploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
@@ -93,7 +94,6 @@ trait UploadField
      * If name already exists, rename it.
      *
      * @param $file
-     *
      * @return void
      */
     public function renameIfExists(UploadedFile $file)
@@ -114,8 +114,7 @@ trait UploadField
     /**
      * Get store name of upload file.
      *
-     * @param UploadedFile $file
-     *
+     * @param  UploadedFile  $file
      * @return string
      */
     protected function getStoreName(UploadedFile $file)
@@ -129,10 +128,10 @@ trait UploadField
         }
 
         if ($this->name instanceof \Closure) {
-            return $this->name->call($this, $file);
+            $this->name = $this->name->call($this->values(), $file);
         }
 
-        if (is_string($this->name)) {
+        if ($this->name !== '' && is_string($this->name)) {
             return $this->name;
         }
 
@@ -147,7 +146,7 @@ trait UploadField
     public function getDirectory()
     {
         if ($this->directory instanceof \Closure) {
-            return call_user_func($this->directory, $this->form);
+            $this->directory = $this->directory->call($this->values(), $this->form);
         }
 
         return $this->directory ?: $this->defaultDirectory();
@@ -156,8 +155,7 @@ trait UploadField
     /**
      * Indicates if the underlying field is retainable.
      *
-     * @param bool $retainable
-     *
+     * @param  bool  $retainable
      * @return $this
      */
     public function retainable(bool $retainable = true)
@@ -177,8 +175,7 @@ trait UploadField
     /**
      * Upload File.
      *
-     * @param UploadedFile $file
-     *
+     * @param  UploadedFile  $file
      * @return Response
      */
     public function upload(UploadedFile $file)
@@ -196,6 +193,10 @@ trait UploadField
         }
 
         $this->name = $this->getStoreName($file);
+
+        if ($this->options['override']) {
+            $this->remove();
+        }
 
         $this->renameIfExists($file);
 
@@ -216,11 +217,18 @@ trait UploadField
         }
 
         // 上传失败
-        return $this->responseErrorMessage(trans('admin.uploader.upload_failed'));
+        throw new UploadException(trans('admin.uploader.upload_failed'));
+    }
+
+    public function remove()
+    {
+        if ($this->getStorage()->exists("{$this->getDirectory()}/$this->name")) {
+            $this->getStorage()->delete("{$this->getDirectory()}/$this->name");
+        }
     }
 
     /**
-     * @param UploadedFile $file
+     * @param  UploadedFile  $file
      */
     protected function prepareFile(UploadedFile $file)
     {
@@ -229,9 +237,8 @@ trait UploadField
     /**
      * Specify the directory and name for upload file.
      *
-     * @param string      $directory
-     * @param null|string $name
-     *
+     * @param  string|\Closure  $directory
+     * @param  null|string  $name
      * @return $this
      */
     public function move($directory, $name = null)
@@ -246,8 +253,7 @@ trait UploadField
     /**
      * Specify the directory upload file.
      *
-     * @param string $dir
-     *
+     * @param  string|\Closure  $dir
      * @return $this
      */
     public function dir($dir)
@@ -262,8 +268,7 @@ trait UploadField
     /**
      * Set name of store name.
      *
-     * @param string|callable $name
-     *
+     * @param  string|callable  $name
      * @return $this
      */
     public function name($name)
@@ -302,8 +307,7 @@ trait UploadField
     /**
      * Generate a unique name for uploaded file.
      *
-     * @param UploadedFile $file
-     *
+     * @param  UploadedFile  $file
      * @return string
      */
     protected function generateUniqueName(UploadedFile $file)
@@ -314,15 +318,14 @@ trait UploadField
     /**
      * Generate a sequence name for uploaded file.
      *
-     * @param UploadedFile $file
-     *
+     * @param  UploadedFile  $file
      * @return string
      */
     protected function generateSequenceName(UploadedFile $file)
     {
         $index = 1;
         $extension = $file->getClientOriginalExtension();
-        $originalName = $file->getClientOriginalName();
+        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $newName = $originalName.'_'.$index.'.'.$extension;
 
         while ($this->getStorage()->exists("{$this->getDirectory()}/$newName")) {
@@ -334,23 +337,28 @@ trait UploadField
     }
 
     /**
-     * @param UploadedFile $file
-     *
+     * @param  UploadedFile  $file
      * @return bool|\Illuminate\Support\MessageBag
      */
     protected function getValidationErrors(UploadedFile $file)
     {
-        $rules = $attributes = [];
+        $data = $rules = $attributes = [];
+
+        // 如果文件上传有错误，则直接返回错误信息
+        if ($file->getError() !== UPLOAD_ERR_OK) {
+            return $file->getErrorMessage();
+        }
 
         if (! $fieldRules = $this->getRules()) {
             return false;
         }
 
-        $rules[$this->column] = $fieldRules;
-        $attributes[$this->column] = $this->label;
+        Arr::set($rules, $this->column, $fieldRules);
+        Arr::set($attributes, $this->column, $this->label);
+        Arr::set($data, $this->column, $file);
 
         /* @var \Illuminate\Validation\Validator $validator */
-        $validator = Validator::make([$this->column => $file], $rules, $this->validationMessages, $attributes);
+        $validator = Validator::make($data, $rules, $this->validationMessages, $attributes);
 
         if (! $validator->passes()) {
             $errors = $validator->errors()->getMessages()[$this->column];
@@ -389,12 +397,16 @@ trait UploadField
     /**
      * Destroy files.
      *
-     * @param string|array $path
+     * @param  string|array  $path
      */
     public function deleteFile($paths)
     {
         if (! $paths || $this->retainable) {
             return;
+        }
+
+        if (method_exists($this, 'destroyThumbnail')) {
+            $this->destroyThumbnail($paths);
         }
 
         $storage = $this->getStorage();
@@ -430,11 +442,10 @@ trait UploadField
     /**
      * Set disk for storage.
      *
-     * @param string $disk Disks defined in `config/filesystems.php`.
+     * @param  string  $disk  Disks defined in `config/filesystems.php`.
+     * @return $this
      *
      * @throws \Exception
-     *
-     * @return $this
      */
     public function disk($disk)
     {
@@ -459,8 +470,7 @@ trait UploadField
     /**
      * Get file visit url.
      *
-     * @param string $path
-     *
+     * @param  string  $path
      * @return string
      */
     public function objectUrl($path)
@@ -474,7 +484,6 @@ trait UploadField
 
     /**
      * @param $permission
-     *
      * @return $this
      */
     public function storagePermission($permission)

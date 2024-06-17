@@ -31,7 +31,7 @@ class MinifyCommand extends Command
     /**
      * @var array
      */
-    protected $themes = [
+    protected $colors = [
         self::DEFAULT => '',
         'blue'        => '#6d8be6',
         'blue-light'  => '#62a8ea',
@@ -60,7 +60,7 @@ class MinifyCommand extends Command
 
         if ($name === static::ALL) {
             // 编译所有内置主题色
-            return $this->compileAllDefaultThemes();
+            return $this->compileAllColors();
         }
 
         $publish = $this->option('publish');
@@ -89,9 +89,9 @@ class MinifyCommand extends Command
     /**
      * 编译所有内置主题.
      */
-    protected function compileAllDefaultThemes()
+    protected function compileAllColors()
     {
-        foreach ($this->themes as $name => $_) {
+        foreach ($this->colors as $name => $_) {
             $this->call('admin:minify', ['name' => $name]);
         }
     }
@@ -216,8 +216,7 @@ class MinifyCommand extends Command
     /**
      * 获取颜色.
      *
-     * @param string $name
-     *
+     * @param  string  $name
      * @return string
      */
     protected function getColor($name)
@@ -230,8 +229,8 @@ class MinifyCommand extends Command
 
         $color = $this->option('color');
 
-        if (! $color && isset($this->themes[$name])) {
-            return $this->themes[$name];
+        if (! $color && isset($this->colors[$name])) {
+            return $this->colors[$name];
         }
 
         if (! $color) {
@@ -246,8 +245,7 @@ class MinifyCommand extends Command
     }
 
     /**
-     * @param string $color
-     *
+     * @param  string  $color
      * @return string
      */
     protected function formatColor($color)
@@ -262,8 +260,8 @@ class MinifyCommand extends Command
     /**
      * 执行命令.
      *
-     * @param string $command
-     * @param int    $timeout
+     * @param  string  $command
+     * @param  int  $timeout
      */
     protected function runProcess($command, $timeout = 1800)
     {

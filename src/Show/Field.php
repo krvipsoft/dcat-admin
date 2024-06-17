@@ -97,8 +97,8 @@ class Field implements Renderable
     /**
      * Field constructor.
      *
-     * @param string $name
-     * @param string $label
+     * @param  string  $name
+     * @param  string  $label
      */
     public function __construct($name = '', $label = '')
     {
@@ -112,8 +112,7 @@ class Field implements Renderable
     /**
      * Set parent show instance.
      *
-     * @param Show $show
-     *
+     * @param  Show  $show
      * @return $this
      */
     public function setParent(Show $show)
@@ -134,8 +133,7 @@ class Field implements Renderable
     }
 
     /**
-     * @param int $width
-     *
+     * @param  int  $width
      * @return $this|array
      */
     public function width(int $field, int $label = 2)
@@ -152,7 +150,6 @@ class Field implements Renderable
      * Format label.
      *
      * @param $label
-     *
      * @return mixed
      */
     protected function formatLabel($label)
@@ -179,8 +176,7 @@ class Field implements Renderable
     /**
      * Field display callback.
      *
-     * @param mixed $callable
-     *
+     * @param  mixed  $callable
      * @return $this
      */
     public function as($callable, ...$params)
@@ -193,9 +189,8 @@ class Field implements Renderable
     /**
      * Display field using array value map.
      *
-     * @param array $values
-     * @param null  $default
-     *
+     * @param  array  $values
+     * @param  null  $default
      * @return $this
      */
     public function using(array $values, $default = null)
@@ -212,10 +207,9 @@ class Field implements Renderable
     /**
      * Show field as a image.
      *
-     * @param string $server
-     * @param int    $width
-     * @param int    $height
-     *
+     * @param  string  $server
+     * @param  int  $width
+     * @param  int  $height
      * @return $this
      */
     public function image($server = '', $width = 200, $height = 200)
@@ -225,7 +219,9 @@ class Field implements Renderable
                 return '';
             }
 
-            return collect((array) $path)->transform(function ($path) use ($server, $width, $height) {
+            $path = Helper::array($path);
+
+            return collect($path)->transform(function ($path) use ($server, $width, $height) {
                 if (url()->isValidUrl($path)) {
                     $src = $path;
                 } elseif ($server) {
@@ -248,9 +244,8 @@ class Field implements Renderable
     /**
      * Show field as a file.
      *
-     * @param string $server
-     * @param bool   $download
-     *
+     * @param  string  $server
+     * @param  bool  $download
      * @return Field
      */
     public function file($server = '', $download = true)
@@ -258,55 +253,62 @@ class Field implements Renderable
         $field = $this;
 
         return $this->unescape()->as(function ($path) use ($server, $field) {
-            $name = basename($path);
-
-            $field->wrap(false);
-
-            $size = $url = '';
-
-            if (url()->isValidUrl($path)) {
-                $url = $path;
-            } elseif ($server) {
-                $url = $server.$path;
-            } else {
-                $storage = Storage::disk(config('admin.upload.disk'));
-                if ($storage->exists($path)) {
-                    $url = $storage->url($path);
-                    $size = ($storage->size($path) / 1000).'KB';
-                }
-            }
-
-            if (! $url) {
+            if (empty($path)) {
                 return '';
             }
 
-            $icon = Helper::getFileIcon($name);
+            $path = Helper::array($path);
 
-            return <<<HTML
-<ul class="mailbox-attachments clearfix">
-    <li style="margin-bottom: 0;">
-      <span class="mailbox-attachment-icon"><i class="{$icon}"></i></span>
-      <div class="mailbox-attachment-info">
+            $list = collect($path)->transform(function ($path) use ($server, $field) {
+                $name = Helper::basename($path);
+
+                $field->wrap(false);
+
+                $size = $url = '';
+
+                if (url()->isValidUrl($path)) {
+                    $url = $path;
+                } elseif ($server) {
+                    $url = $server.$path;
+                } else {
+                    $storage = Storage::disk(config('admin.upload.disk'));
+                    if ($storage->exists($path)) {
+                        $url = $storage->url($path);
+                        $size = ($storage->size($path) / 1000).'KB';
+                    }
+                }
+
+                if (! $url) {
+                    return '';
+                }
+
+                $icon = Helper::getFileIcon($name);
+
+                return <<<HTML
+<li style="margin-bottom: 0;">
+    <span class="mailbox-attachment-icon"><i class="{$icon}"></i></span>
+    <div class="mailbox-attachment-info">
         <div class="mailbox-attachment-name">
             <i class="fa fa-paperclip"></i> {$name}
-            </div>
-            <span class="mailbox-attachment-size">
-              {$size}&nbsp;
-              <a href="{$url}" class="btn btn-white  btn-xs pull-right" target="_blank"><i class="fa fa-cloud-download"></i></a>
-            </span>
-      </div>
-    </li>
-  </ul>
+        </div>
+        <span class="mailbox-attachment-size">
+            {$size}&nbsp;
+            <a href="{$url}" class="btn btn-white  btn-xs pull-right" target="_blank"><i class="fa fa-cloud-download"></i></a>
+        </span>
+    </div>
+</li>
 HTML;
+            })->implode('&nbsp;');
+
+            return "<ul class=\"mailbox-attachments clearfix\">{$list}</ul>";
         });
     }
 
     /**
      * Show field as a link.
      *
-     * @param string $href
-     * @param string $target
-     *
+     * @param  string  $href
+     * @param  string  $target
      * @return Field
      */
     public function link($href = '', $target = '_blank')
@@ -321,8 +323,7 @@ HTML;
     /**
      * Show field as labels.
      *
-     * @param string $style
-     *
+     * @param  string  $style
      * @return Field
      */
     public function label($style = 'primary')
@@ -334,16 +335,15 @@ HTML;
 
             return collect($value)->map(function ($name) use ($class, $background) {
                 return "<span class='label bg-{$class}' $background>$name</span>";
-            })->implode('&nbsp;');
+            })->implode(' ');
         });
     }
 
     /**
      * Add a `dot` before column text.
      *
-     * @param array  $options
-     * @param string $default
-     *
+     * @param  array  $options
+     * @param  string  $default
      * @return $this
      */
     public function dot($options = [], $default = 'default')
@@ -362,8 +362,7 @@ HTML;
     /**
      * Show field as badges.
      *
-     * @param string $style
-     *
+     * @param  string  $style
      * @return Field
      */
     public function badge($style = 'blue')
@@ -375,13 +374,12 @@ HTML;
 
             return collect($value)->map(function ($name) use ($class, $background) {
                 return "<span class='badge bg-{$class}' $background>$name</span>";
-            })->implode('&nbsp;');
+            })->implode(' ');
         });
     }
 
     /**
      * @param $style
-     *
      * @return array
      */
     public function formatStyle($style)
@@ -418,8 +416,7 @@ HTML;
     }
 
     /**
-     * @param string $val
-     *
+     * @param  string  $val
      * @return $this
      */
     public function prepend($val)
@@ -444,8 +441,7 @@ HTML;
     }
 
     /**
-     * @param string $val
-     *
+     * @param  string  $val
      * @return $this
      */
     public function append($val)
@@ -472,8 +468,7 @@ HTML;
     /**
      * Split a string by string.
      *
-     * @param string $d
-     *
+     * @param  string  $d
      * @return $this
      */
     public function explode(string $d = ',')
@@ -490,26 +485,25 @@ HTML;
     /**
      * Render this column with the given view.
      *
-     * @param string $view
-     *
+     * @param  string  $view
+     * @param  array  $data
      * @return $this
      */
-    public function view($view)
+    public function view($view, array $data = [])
     {
         $name = $this->name;
 
-        return $this->unescape()->as(function ($value) use ($view, $name) {
+        return $this->unescape()->as(function ($value) use ($view, $name, $data) {
             $model = $this;
 
-            return view($view, compact('model', 'value', 'name'))->render();
+            return view($view, array_merge(compact('model', 'value', 'name'), $data))->render();
         });
     }
 
     /**
      * Set escape or not for this field.
      *
-     * @param bool $escape
-     *
+     * @param  bool  $escape
      * @return $this
      */
     public function escape($escape = true)
@@ -530,8 +524,7 @@ HTML;
     }
 
     /**
-     * @param Fluent|\Illuminate\Database\Eloquent\Model $model
-     *
+     * @param  Fluent|\Illuminate\Database\Eloquent\Model  $model
      * @return void
      */
     public function fill($model)
@@ -542,8 +535,7 @@ HTML;
     /**
      * Get or set value for this field.
      *
-     * @param mixed $value
-     *
+     * @param  mixed  $value
      * @return $this|mixed
      */
     public function value($value = null)
@@ -568,9 +560,41 @@ HTML;
     }
 
     /**
+     * @param  string  $color
+     * @return $this
+     */
+    public function bold($color = null)
+    {
+        $color = $color ?: Admin::color()->dark80();
+
+        return $this->unescape()->as(function ($value) use ($color) {
+            if (! $value) {
+                return $value;
+            }
+
+            return "<b style='color: {$color}'>$value</b>";
+        });
+    }
+
+    /**
+     * Display field as boolean , `✓` for true, and `✗` for false.
+     *
+     * @param  array  $map
+     * @param  bool  $default
+     * @return $this
+     */
+    public function bool(array $map = [], $default = false)
+    {
+        return $this->unescape()->as(function ($value) use ($map, $default) {
+            $bool = empty($map) ? $value : Arr::get($map, $value, $default);
+
+            return $bool ? '<i class="feather icon-check font-md-2 font-w-600 text-primary"></i>' : '<i class="feather icon-x font-md-1 font-w-600 text-70"></i>';
+        });
+    }
+
+    /**
      * @param  mixed  $value
      * @param  callable  $callback
-     *
      * @return $this|mixed
      */
     public function when($value, $callback)
@@ -583,9 +607,8 @@ HTML;
     }
 
     /**
-     * @param string $method
-     * @param array  $arguments
-     *
+     * @param  string  $method
+     * @param  array  $arguments
      * @return $this
      */
     public function __call($method, $arguments = [])
@@ -604,9 +627,8 @@ HTML;
     /**
      * Call extended field.
      *
-     * @param string|AbstractField|\Closure $abstract
-     * @param array                         $arguments
-     *
+     * @param  string|AbstractField|\Closure  $abstract
+     * @param  array  $arguments
      * @return Field
      */
     protected function callExtendedField($abstract, $arguments = [])
@@ -651,9 +673,8 @@ HTML;
     /**
      * Call Illuminate/Support.
      *
-     * @param string $abstract
-     * @param array  $arguments
-     *
+     * @param  string  $abstract
+     * @param  array  $arguments
      * @return $this
      */
     protected function callSupportDisplayer($abstract, $arguments)
@@ -718,9 +739,8 @@ HTML;
     /**
      * Register custom field.
      *
-     * @param string $abstract
-     * @param string $class
-     *
+     * @param  string  $abstract
+     * @param  string  $class
      * @return void
      */
     public static function extend($abstract, $class)
@@ -734,5 +754,22 @@ HTML;
     public static function extensions()
     {
         return static::$extendedFields;
+    }
+
+    /**
+     * set file size.
+     *
+     * @param  int  $dec
+     * @return Field
+     */
+    public function filesize($dec = 0)
+    {
+        return $this->unescape()->as(function ($value) use ($dec) {
+            if (empty($value)) {
+                return $this;
+            }
+
+            return format_byte($value, $dec);
+        });
     }
 }

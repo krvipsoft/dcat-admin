@@ -50,16 +50,17 @@ trait HasFieldValidator
     /**
      * Set the update validation rules for the field.
      *
-     * @param array|callable|string $rules
-     * @param array                 $messages
-     *
+     * @param  array|callable|string  $rules
+     * @param  array  $messages
      * @return $this
      */
     public function updateRules($rules = null, $messages = [])
     {
         $this->updateRules = $this->mergeRules($rules, $this->updateRules);
 
-        $this->setValidationMessages('update', $messages);
+        if ($messages) {
+            $this->setValidationMessages('update', $messages);
+        }
 
         return $this;
     }
@@ -67,16 +68,17 @@ trait HasFieldValidator
     /**
      * Set the creation validation rules for the field.
      *
-     * @param array|callable|string $rules
-     * @param array                 $messages
-     *
+     * @param  array|callable|string  $rules
+     * @param  array  $messages
      * @return $this
      */
     public function creationRules($rules = null, $messages = [])
     {
         $this->creationRules = $this->mergeRules($rules, $this->creationRules);
 
-        $this->setValidationMessages('creation', $messages);
+        if ($messages) {
+            $this->setValidationMessages('creation', $messages);
+        }
 
         return $this;
     }
@@ -84,9 +86,8 @@ trait HasFieldValidator
     /**
      * Get or set rules.
      *
-     * @param null  $rules
-     * @param array $messages
-     *
+     * @param  null  $rules
+     * @param  array  $messages
      * @return $this
      */
     public function rules($rules = null, $messages = [])
@@ -95,7 +96,7 @@ trait HasFieldValidator
             $this->rules = $rules;
         }
 
-        $originalRules = is_array($this->rules) ? $this->rules : [];
+        $originalRules = $this->getRules();
 
         if (is_array($rules)) {
             $this->rules = array_merge($originalRules, $rules);
@@ -103,7 +104,9 @@ trait HasFieldValidator
             $this->rules = array_merge($originalRules, array_filter(explode('|', $rules)));
         }
 
-        $this->setValidationMessages('default', $messages);
+        if ($messages) {
+            $this->setValidationMessages('default', $messages);
+        }
 
         return $this;
     }
@@ -153,8 +156,7 @@ trait HasFieldValidator
     /**
      * Format validation rules.
      *
-     * @param array|string $rules
-     *
+     * @param  array|string  $rules
      * @return array
      */
     protected function formatRules($rules)
@@ -167,9 +169,8 @@ trait HasFieldValidator
     }
 
     /**
-     * @param string|array|\Closure $input
-     * @param string|array          $original
-     *
+     * @param  string|array|\Closure  $input
+     * @param  string|array  $original
      * @return array|\Closure
      */
     protected function mergeRules($input, $original)
@@ -187,8 +188,7 @@ trait HasFieldValidator
     }
 
     /**
-     * @param string $rule
-     *
+     * @param  string  $rule
      * @return $this
      */
     public function removeUpdateRule($rule)
@@ -199,8 +199,7 @@ trait HasFieldValidator
     }
 
     /**
-     * @param string $rule
-     *
+     * @param  string  $rule
      * @return $this
      */
     public function removeCreationRule($rule)
@@ -213,8 +212,7 @@ trait HasFieldValidator
     /**
      * Remove a specific rule by keyword.
      *
-     * @param string $rule
-     *
+     * @param  string  $rule
      * @return $this
      */
     public function removeRule($rule)
@@ -227,7 +225,6 @@ trait HasFieldValidator
     /**
      * @param $rules
      * @param $rule
-     *
      * @return void
      */
     protected function deleteRuleByKeyword(&$rules, $rule)
@@ -248,8 +245,7 @@ trait HasFieldValidator
     }
 
     /**
-     * @param string $rule
-     *
+     * @param  string  $rule
      * @return bool
      */
     public function hasUpdateRule($rule)
@@ -258,8 +254,7 @@ trait HasFieldValidator
     }
 
     /**
-     * @param string $rule
-     *
+     * @param  string  $rule
      * @return bool
      */
     public function hasCreationRule($rule)
@@ -268,8 +263,7 @@ trait HasFieldValidator
     }
 
     /**
-     * @param string $rule
-     *
+     * @param  string  $rule
      * @return bool
      */
     public function hasRule($rule)
@@ -278,8 +272,7 @@ trait HasFieldValidator
     }
 
     /**
-     * @param string $rule
-     *
+     * @param  string  $rule
      * @return bool|mixed
      */
     protected function getRule($rule)
@@ -312,7 +305,6 @@ trait HasFieldValidator
     /**
      * @param $rules
      * @param $rule
-     *
      * @return bool
      */
     protected function isRuleExists($rules, $rule)
@@ -341,8 +333,7 @@ trait HasFieldValidator
     /**
      * Set field validator.
      *
-     * @param callable $validator
-     *
+     * @param  callable  $validator
      * @return $this
      */
     public function validator(callable $validator)
@@ -355,8 +346,7 @@ trait HasFieldValidator
     /**
      * Get validator for this field.
      *
-     * @param array $input
-     *
+     * @param  array  $input
      * @return bool|Validator
      */
     public function getValidator(array $input)
@@ -387,9 +377,10 @@ trait HasFieldValidator
                 if (! Arr::has($input, $column)) {
                     continue;
                 }
-                $input[$column.$key] = Arr::get($input, $column);
-                $rules[$column.$key] = $fieldRules;
-                $attributes[$column.$key] = "{$this->label}[$column]";
+                $k = $column.$key;
+                Arr::set($input, $k, Arr::get($input, $column));
+                $rules[$k] = $fieldRules;
+                $attributes[$k] = "{$this->label}[$column]";
             }
         }
 
@@ -399,9 +390,8 @@ trait HasFieldValidator
     /**
      * Set validation messages for column.
      *
-     * @param string $key
-     * @param array  $messages
-     *
+     * @param  string  $key
+     * @param  array  $messages
      * @return $this
      */
     public function setValidationMessages($key, array $messages)
@@ -455,9 +445,8 @@ trait HasFieldValidator
      *
      * @see http://1000hz.github.io/bootstrap-validator/
      *
-     * @param string $error
-     * @param string $key
-     *
+     * @param  string  $error
+     * @param  string  $key
      * @return $this
      */
     public function setClientValidationError(string $error, string $key = null)
@@ -468,8 +457,7 @@ trait HasFieldValidator
     }
 
     /**
-     * @param MessageBag $messageBag
-     *
+     * @param  MessageBag  $messageBag
      * @return MessageBag
      */
     public function formatValidatorMessages($messageBag)

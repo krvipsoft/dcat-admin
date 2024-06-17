@@ -3,7 +3,7 @@
         <span class="input-group-text bg-white text-capitalize"><b>{!! $label !!}</b></span>
     </div>
 
-    <select class="form-control {{ $class }}" name="{{$name}}[]" multiple style="width: 100%;">
+    <select class="form-control {{ $class }}" name="{{$name}}[]" multiple style="width: 100%;" data-value="{{implode(',',(array) $value)}}">
         @foreach($options as $select => $option)
             <option value="{{$select}}" {{ in_array((string)$select, (array) $value)  ?'selected':'' }}>{{$option}}</option>
         @endforeach
@@ -12,7 +12,7 @@
 
 @include('admin::scripts.select')
 
-<script require="@select2">
+<script require="@select2?lang={{ config('app.locale') === 'en' ? '' : str_replace('_', '-', config('app.locale')) }}">
     var configs = {!! admin_javascript_json($configs) !!};
 
     @yield('admin.select-ajax')
@@ -29,5 +29,3 @@
 </script>
 
 @yield('admin.select-load')
-
-@yield('admin.select-lang')

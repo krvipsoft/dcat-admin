@@ -9,14 +9,15 @@ use Illuminate\Http\Request;
 
 class RenderableController
 {
-    /**
-     * @param Request $request
-     *
-     * @return mixed|string
-     */
     public function handle(Request $request)
     {
+        $this->initTranslation($request);
+
         $renderable = $this->newRenderable($request);
+
+        if (method_exists($renderable, 'passesAuthorization') && ! $renderable->passesAuthorization()) {
+            return $renderable->failedAuthorization();
+        }
 
         $this->addScript();
 
@@ -35,6 +36,13 @@ class RenderableController
             .$asset->cssToHtml()
             .$asset->scriptToHtml()
             .$asset->styleToHtml();
+    }
+
+    protected function initTranslation(Request $request)
+    {
+        if ($path = $request->get('_trans_')) {
+            Admin::translation($path);
+        }
     }
 
     protected function newRenderable(Request $request): LazyRenderable
@@ -56,7 +64,8 @@ class RenderableController
 
     protected function addScript()
     {
-        Admin::script('Dcat.pjaxResponded()', true);
+        // 等待JS脚本加载完成
+        Admin::script('Dcat.wait()', true);
     }
 
     protected function forgetDefaultAssets()

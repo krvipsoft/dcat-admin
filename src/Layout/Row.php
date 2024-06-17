@@ -11,10 +11,12 @@ class Row implements Renderable
      */
     protected $columns = [];
 
+    protected $noGutters = false;
+
     /**
      * Row constructor.
      *
-     * @param string $content
+     * @param  string  $content
      */
     public function __construct($content = '')
     {
@@ -30,7 +32,7 @@ class Row implements Renderable
     /**
      * Add a column.
      *
-     * @param int $width
+     * @param  int  $width
      * @param $content
      */
     public function column($width, $content)
@@ -41,11 +43,22 @@ class Row implements Renderable
     }
 
     /**
-     * @param Column $column
+     * @param  Column  $column
      */
     protected function addColumn(Column $column)
     {
         $this->columns[] = $column;
+    }
+
+    /**
+     * @param  bool  $value
+     * @return $this
+     */
+    public function noGutters(bool $value = true)
+    {
+        $this->noGutters = $value;
+
+        return $this;
     }
 
     /**
@@ -71,7 +84,9 @@ class Row implements Renderable
      */
     protected function startRow()
     {
-        return '<div class="row">';
+        $noGutters = $this->noGutters ? 'no-gutters' : '';
+
+        return "<div class=\"row {$noGutters}\">";
     }
 
     /**

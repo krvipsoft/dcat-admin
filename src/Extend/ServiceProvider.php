@@ -6,6 +6,7 @@ use Dcat\Admin\Admin;
 use Dcat\Admin\Exception\RuntimeException;
 use Dcat\Admin\Support\ComposerProperty;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Symfony\Component\Console\Output\NullOutput;
 
@@ -138,9 +139,23 @@ abstract class ServiceProvider extends LaravelServiceProvider
      *
      * @return string|void
      */
-    final public function getName()
+    public function getName()
     {
         return $this->name ?: ($this->name = str_replace('/', '.', $this->getPackageName()));
+    }
+
+    /**
+     * 获取扩展别名.
+     *
+     * @return string
+     */
+    public function getAlias()
+    {
+        if (! $this->composerProperty) {
+            return;
+        }
+
+        return $this->composerProperty->alias;
     }
 
     /**
@@ -148,7 +163,7 @@ abstract class ServiceProvider extends LaravelServiceProvider
      *
      * @return string|void
      */
-    final public function getPackageName()
+    public function getPackageName()
     {
         if (! $this->packageName) {
             if (! $this->composerProperty) {
@@ -176,7 +191,7 @@ abstract class ServiceProvider extends LaravelServiceProvider
      *
      * @return string
      */
-    final public function getVersion()
+    public function getVersion()
     {
         return Admin::extension()->versionManager()->getCurrentVersion($this);
     }
@@ -186,7 +201,7 @@ abstract class ServiceProvider extends LaravelServiceProvider
      *
      * @return string
      */
-    final public function getLatestVersion()
+    public function getLatestVersion()
     {
         return Admin::extension()->versionManager()->getFileVersions($this);
     }
@@ -196,7 +211,7 @@ abstract class ServiceProvider extends LaravelServiceProvider
      *
      * @return string
      */
-    final public function getLocalLatestVersion()
+    public function getLocalLatestVersion()
     {
         return last(
             array_keys(Admin::extension()->versionManager()->getFileVersions($this))
@@ -206,8 +221,7 @@ abstract class ServiceProvider extends LaravelServiceProvider
     /**
      * 获取扩展包路径.
      *
-     * @param string $path
-     *
+     * @param  string  $path
      * @return string
      *
      * @throws \ReflectionException
@@ -228,11 +242,42 @@ abstract class ServiceProvider extends LaravelServiceProvider
     }
 
     /**
+     * 获取logo路径.
+     *
+     * @return string
+     *
+     * @throws \ReflectionException
+     */
+    public function getLogoPath()
+    {
+        return $this->path('logo.png');
+    }
+
+    /**
+     * @return string
+     */
+    public function getLogoBase64()
+    {
+        try {
+            $logo = $this->getLogoPath();
+
+            if (is_file($logo) && $file = fopen($logo, 'rb', 0)) {
+                $content = fread($file, filesize($logo));
+                fclose($file);
+                $base64 = chunk_split(base64_encode($content));
+
+                return 'data:image/png;base64,'.$base64;
+            }
+        } catch (\ReflectionException $e) {
+        }
+    }
+
+    /**
      * 判断扩展是否启用.
      *
      * @return bool
      */
-    final public function enabled()
+    public function enabled()
     {
         return Admin::extension()->enabled($this->getName());
     }
@@ -242,7 +287,7 @@ abstract class ServiceProvider extends LaravelServiceProvider
      *
      * @return bool
      */
-    final public function disabled()
+    public function disabled()
     {
         return ! $this->enabled();
     }
@@ -250,12 +295,11 @@ abstract class ServiceProvider extends LaravelServiceProvider
     /**
      * 获取或保存配置.
      *
-     * @param string $key
-     * @param null   $default
-     *
+     * @param  string  $key
+     * @param  null  $default
      * @return mixed
      */
-    final public function config($key = null, $default = null)
+    public function config($key = null, $default = null)
     {
         if ($this->config === null) {
             $this->initConfig();
@@ -277,7 +321,7 @@ abstract class ServiceProvider extends LaravelServiceProvider
     /**
      * 保存配置.
      *
-     * @param array $config
+     * @param  array  $config
      */
     public function saveConfig(array $config)
     {
@@ -298,8 +342,8 @@ abstract class ServiceProvider extends LaravelServiceProvider
     /**
      * 更新扩展.
      *
-     * @param $currentVersion
-     * @param $stopOnVersion
+     * @param  string  $currentVersion
+     * @param  string  $stopOnVersion
      *
      * @throws \Exception
      */
@@ -395,11 +439,11 @@ abstract class ServiceProvider extends LaravelServiceProvider
     protected function addExceptRoutes()
     {
         if (! empty($this->exceptRoutes['permission'])) {
-            Admin::context()->addMany('permission.except', (array) $this->exceptRoutes['permission']);
+            Admin::context()->merge('permission.except', (array) $this->exceptRoutes['permission']);
         }
 
         if (! empty($this->exceptRoutes['auth'])) {
-            Admin::context()->addMany('auth.except', (array) $this->exceptRoutes['auth']);
+            Admin::context()->merge('auth.except', (array) $this->exceptRoutes['auth']);
         }
     }
 
@@ -448,8 +492,7 @@ abstract class ServiceProvider extends LaravelServiceProvider
     }
 
     /**
-     * @param ComposerProperty $composerProperty
-     *
+     * @param  ComposerProperty  $composerProperty
      * @return $this
      */
     public function withComposerProperty(ComposerProperty $composerProperty)
@@ -462,9 +505,8 @@ abstract class ServiceProvider extends LaravelServiceProvider
     /**
      * 获取或保存配置.
      *
-     * @param string $key
-     * @param string $value
-     *
+     * @param  string  $key
+     * @param  string  $value
      * @return mixed
      */
     public static function setting($key = null, $value = null)
@@ -479,10 +521,9 @@ abstract class ServiceProvider extends LaravelServiceProvider
     /**
      * 翻译.
      *
-     * @param string $key
-     * @param array  $replace
-     * @param null   $locale
-     *
+     * @param  string  $key
+     * @param  array  $replace
+     * @param  null  $locale
      * @return array|string|null
      */
     public static function trans($key, $replace = [], $locale = null)
@@ -519,14 +560,17 @@ abstract class ServiceProvider extends LaravelServiceProvider
     }
 
     /**
-     * @param string|array $files
-     *
+     * @param  string|array  $files
      * @return mixed
      */
     protected function formatAssetFiles($files)
     {
         if (is_array($files)) {
             return array_map([$this, 'formatAssetFiles'], $files);
+        }
+
+        if (URL::isValidUrl($files)) {
+            return $files;
         }
 
         return '@'.$this->getName().'.path/'.trim($files, '/');
@@ -544,7 +588,6 @@ abstract class ServiceProvider extends LaravelServiceProvider
 
     /**
      * @param $config
-     *
      * @return false|string
      */
     protected function serializeConfig($config)
@@ -554,7 +597,6 @@ abstract class ServiceProvider extends LaravelServiceProvider
 
     /**
      * @param $config
-     *
      * @return array
      */
     protected function unserializeConfig($config)

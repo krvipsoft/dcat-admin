@@ -75,7 +75,10 @@ class Asset
             'js' => '@admin/dcat/plugins/bootstrap-validator/validator.min.js',
         ],
         '@select2' => [
-            'js'  => '@admin/dcat/plugins/select/select2.full.min.js',
+            'js'  => [
+                '@admin/dcat/plugins/select/select2.full.min.js',
+                '@admin/dcat/plugins/select/i18n/{lang}.js',
+            ],
             'css' => '@admin/dcat/plugins/select/select2.min.css',
         ],
         '@bootstrap-datetimepicker' => [
@@ -145,7 +148,7 @@ class Asset
                 '@admin/dcat/extra/markdown.css',
             ],
         ],
-        '@markdown' => [
+        '@editor-md-form' => [
             'js' => [
                 '@admin/dcat/plugins/editor-md/lib/raphael.min.js',
                 '@admin/dcat/plugins/editor-md/editormd.min.js',
@@ -173,6 +176,9 @@ class Asset
         ],
         '@sortable' => [
             'js' => '@admin/dcat/plugins/sortable/Sortable.min.js',
+        ],
+        '@autocomplete' => [
+            'js' => '@admin/dcat/plugins/autocomplete/jquery.autocomplete.min.js',
         ],
     ];
 
@@ -254,24 +260,9 @@ class Asset
     ];
 
     /**
-     * @var bool
-     */
-    protected $isPjax = false;
-
-    /**
-     * Assets constructor.
-     */
-    public function __construct()
-    {
-        $this->isPjax = request()->pjax();
-
-        $this->initTheme();
-    }
-
-    /**
      * 初始化主题样式.
      */
-    protected function initTheme()
+    protected function setUpTheme()
     {
         $color = Admin::color()->getName();
 
@@ -298,9 +289,8 @@ class Asset
     /**
      * 设置或获取别名.
      *
-     * @param string|array $name
-     * @param string|array $value
-     *
+     * @param  string|array  $name
+     * @param  string|array  $value
      * @return void|array
      */
     public function alias($name, $value = null)
@@ -314,7 +304,7 @@ class Asset
         }
 
         if ($value === null) {
-            return $this->alias[$name] ?? [];
+            return $this->getAlias($name);
         }
 
         if (mb_strpos($name, '@') !== 0) {
@@ -325,32 +315,103 @@ class Asset
     }
 
     /**
+     * 获取别名.
+     *
+     * @param  string  $name
+     * @param  array  $params
+     * @return array|string
+     */
+    public function getAlias($name, array $params = [])
+    {
+        if (mb_strpos($name, '@') !== 0) {
+            $name = '@'.$name;
+        }
+
+        [$name, $query] = $this->parseParams($name);
+
+        $assets = $this->alias[$name] ?? [];
+
+        // 路径别名
+        if (is_string($assets)) {
+            return $assets;
+        }
+
+        $params += $query;
+
+        return [
+            'js' => $this->normalizeAliasPaths($assets['js'] ?? [], $params) ?: null,
+            'css' => $this->normalizeAliasPaths($assets['css'] ?? [], $params) ?: null,
+        ];
+    }
+
+    /**
+     * @param  array  $files
+     * @param  array  $params
+     * @return array
+     */
+    protected function normalizeAliasPaths($files, array $params)
+    {
+        $files = (array) $files;
+
+        foreach ($files as &$file) {
+            foreach ($params as $k => $v) {
+                if ($v !== '' && $v !== null) {
+                    $file = str_replace("{{$k}}", $v, $file);
+                }
+            }
+        }
+
+        return array_filter($files, function ($file) {
+            return ! mb_strpos($file, '{');
+        });
+    }
+
+    /**
+     * 解析参数.
+     *
+     * @param  string  $name
+     * @return array
+     */
+    protected function parseParams($name)
+    {
+        $name = explode('?', $name);
+
+        if (empty($name[1])) {
+            return [$name[0], []];
+        }
+
+        parse_str($name[1], $params);
+
+        return [$name[0], $params];
+    }
+
+    /**
      * 根据别名设置需要载入的js和css脚本.
      *
-     * @param string|array $alias
+     * @param  string|array  $alias
+     * @param  array  $params
+     * @return void
      */
-    public function require($alias)
+    public function require($alias, array $params = [])
     {
         if (is_array($alias)) {
             foreach ($alias as $v) {
-                $this->require($v);
+                $this->require($v, $params);
             }
 
             return;
         }
 
-        if (mb_strpos($alias, '@') !== 0) {
-            $alias = '@'.$alias;
-        }
+        $assets = $this->getAlias($alias, $params);
 
-        $this->js($this->alias[$alias]['js'] ?? null);
-        $this->css($this->alias[$alias]['css'] ?? null);
+        $this->js($assets['js']);
+        $this->css($assets['css']);
     }
 
     /**
      * 设置需要载入的css脚本.
      *
-     * @param string|array $css
+     * @param  string|array  $css
      */
     public function css($css)
     {
@@ -366,7 +427,7 @@ class Asset
     /**
      * 设置需要载入的基础css脚本.
      *
-     * @param array $css
+     * @param  array  $css
      */
     public function baseCss(array $css, bool $merge = false)
     {
@@ -380,7 +441,7 @@ class Asset
     /**
      * 设置需要载入的js脚本.
      *
-     * @param string|array $js
+     * @param  string|array  $js
      */
     public function js($js)
     {
@@ -396,9 +457,8 @@ class Asset
     /**
      * 根据别名获取资源路径.
      *
-     * @param string $path
-     * @param string $type
-     *
+     * @param  string  $path
+     * @param  string  $type
      * @return string|array|null
      */
     public function get($path, string $type = 'js')
@@ -423,8 +483,7 @@ class Asset
     /**
      * 获取静态资源完整URL.
      *
-     * @param string $path
-     *
+     * @param  string  $path
      * @return string
      */
     public function url($path)
@@ -445,8 +504,7 @@ class Asset
     /**
      * 获取真实路径.
      *
-     * @param string|null $path
-     *
+     * @param  string|null  $path
      * @return string|null
      */
     public function getRealPath(?string $path)
@@ -473,8 +531,7 @@ class Asset
     /**
      * 判断是否是路径别名.
      *
-     * @param mixed $value
-     *
+     * @param  mixed  $value
      * @return bool
      */
     public function isPathAlias($value)
@@ -486,7 +543,6 @@ class Asset
      * 判断别名是否存在.
      *
      * @param $value
-     *
      * @return bool
      */
     public function hasAlias($value)
@@ -497,8 +553,7 @@ class Asset
     /**
      * 判断是否含有别名.
      *
-     * @param string $value
-     *
+     * @param  string  $value
      * @return bool
      */
     protected function containsAlias($value)
@@ -509,22 +564,22 @@ class Asset
     /**
      * 设置在head标签内加载的js.
      *
-     * @param string|array $js
+     * @param  string|array  $js
      */
-    public function headerJs($js)
+    public function headerJs($js, bool $merge = true)
     {
-        if (! $js) {
-            return;
+        if ($merge) {
+            $this->headerJs = $js ? array_merge($this->headerJs, (array) $js) : $this->headerJs;
+        } else {
+            $this->headerJs = (array) $js;
         }
-
-        $this->headerJs = array_merge($this->headerJs, (array) $js);
     }
 
     /**
      * 设置基础js脚本.
      *
-     * @param array $js
-     * @param bool $merge
+     * @param  array  $js
+     * @param  bool  $merge
      */
     public function baseJs(array $js, bool $merge = true)
     {
@@ -538,8 +593,8 @@ class Asset
     /**
      * 设置js代码.
      *
-     * @param string|array $script
-     * @param bool         $direct
+     * @param  string|array  $script
+     * @param  bool  $direct
      */
     public function script($script, bool $direct = false)
     {
@@ -556,7 +611,7 @@ class Asset
     /**
      * 设置css代码.
      *
-     * @param string $style
+     * @param  string  $style
      */
     public function style($style)
     {
@@ -577,12 +632,17 @@ class Asset
         ));
     }
 
+    protected function isPjax()
+    {
+        return request()->pjax();
+    }
+
     /**
      * 合并基础css脚本.
      */
     protected function mergeBaseCss()
     {
-        if ($this->isPjax) {
+        if ($this->isPjax()) {
             return;
         }
 
@@ -596,6 +656,8 @@ class Asset
      */
     public function cssToHtml()
     {
+        $this->setUpTheme();
+
         $this->mergeBaseCss();
 
         $html = '';
@@ -614,8 +676,7 @@ class Asset
     }
 
     /**
-     * @param string $url
-     *
+     * @param  string  $url
      * @return string
      */
     public function withVersionQuery($url)
@@ -634,7 +695,7 @@ class Asset
      */
     protected function mergeBaseJs()
     {
-        if ($this->isPjax) {
+        if ($this->isPjax()) {
             return;
         }
 
@@ -688,8 +749,8 @@ class Asset
      */
     public function scriptToHtml()
     {
-        $script = implode(';', array_unique($this->script));
-        $directScript = implode(';', array_unique($this->directScript));
+        $script = implode(";\n", array_unique($this->script));
+        $directScript = implode(";\n", array_unique($this->directScript));
 
         return <<<HTML
 <script data-exec-on-popstate>

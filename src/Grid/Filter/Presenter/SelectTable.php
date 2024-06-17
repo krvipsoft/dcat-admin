@@ -27,6 +27,10 @@ class SelectTable extends Presenter
 
     protected $placeholder;
 
+    protected $visibleColumn;
+
+    protected $key;
+
     public function __construct(LazyRenderable $table)
     {
         $this->dialog = DialogTable::make($table);
@@ -36,8 +40,7 @@ class SelectTable extends Presenter
     /**
      * 设置选中的选项.
      *
-     * @param \Closure $options
-     *
+     * @param  \Closure  $options
      * @return $this
      */
     public function options(\Closure $options)
@@ -50,21 +53,35 @@ class SelectTable extends Presenter
     /**
      * 设置选中数据显示.
      *
-     * @param string $model
-     * @param string $id
-     * @param string $text
-     *
+     * @param  string  $model
+     * @param  string  $id
+     * @param  string  $text
      * @return $this
      */
     public function model(string $model, string $id = 'id', string $text = 'title')
     {
-        return $this->options(function ($v) use ($model, $id, $text) {
+        return $this->pluck($text, $id)->options(function ($v) use ($model, $id, $text) {
             if (! $v) {
                 return [];
             }
 
-            return $model::find($v)->pluck($text, $id);
+            return $model::query()->whereIn($id, $v)->pluck($text, $id);
         });
+    }
+
+    /**
+     * 设置选中的key以及标题字段.
+     *
+     * @param $visibleColumn
+     * @param $key
+     * @return $this
+     */
+    public function pluck(?string $visibleColumn, ?string $key = 'id')
+    {
+        $this->visibleColumn = $visibleColumn;
+        $this->key = $key;
+
+        return $this;
     }
 
     /**
@@ -74,8 +91,7 @@ class SelectTable extends Presenter
      *    $this->width('500px');
      *    $this->width('50%');
      *
-     * @param string $width
-     *
+     * @param  string  $width
      * @return $this
      */
     public function dialogWidth(string $width)
@@ -88,8 +104,7 @@ class SelectTable extends Presenter
     /**
      * 设置弹窗标题.
      *
-     * @param string $title
-     *
+     * @param  string  $title
      * @return $this
      */
     public function title($title)
@@ -100,8 +115,7 @@ class SelectTable extends Presenter
     }
 
     /**
-     * @param string $placeholder
-     *
+     * @param  string  $placeholder
      * @return $this|string
      */
     public function placeholder(string $placeholder = null)
@@ -120,6 +134,14 @@ class SelectTable extends Presenter
         $this->dialog
             ->footer($this->renderFooter())
             ->button($this->renderButton());
+
+        // 设置选中的字段和待显示的标题字段
+        $this->dialog
+            ->getTable()
+            ->getRenderable()
+            ->payload([
+                LazyRenderable::ROW_SELECTOR_COLUMN_NAME => [$this->key, $this->visibleColumn],
+            ]);
     }
 
     protected function formatOptions()

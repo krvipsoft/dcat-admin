@@ -2,6 +2,7 @@
 
 namespace Dcat\Admin\Form\Concerns;
 
+use Dcat\Admin\Contracts\FieldsCollection;
 use Dcat\Admin\Contracts\UploadField as UploadFieldInterface;
 use Dcat\Admin\Form\Builder;
 use Dcat\Admin\Form\Field;
@@ -19,8 +20,7 @@ trait HasFiles
     /**
      * 文件上传操作.
      *
-     * @param array $data
-     *
+     * @param  array  $data
      * @return Response|void
      */
     protected function handleUploadFile($data)
@@ -61,41 +61,54 @@ trait HasFiles
     /**
      * 根据字段名称查找字段.
      *
-     * @param string|null $column
-     *
+     * @param  string|null  $column
      * @return Field|null
      */
     public function findFieldByName(?string $column)
     {
-        return $this->builder->field($column);
+        if ($field = $this->builder->field($column)) {
+            return $field;
+        }
+
+        $columns = explode('.', $column);
+        $field = $this->builder;
+        foreach ($columns as $column) {
+            if ($field instanceof FieldsCollection) {
+                $field = $field->field($column);
+            }
+        }
+
+        return $field;
     }
 
     /**
      * 新增页面删除文件.
      *
-     * @param array $input
-     *
+     * @param  array  $input
      * @return \Illuminate\Http\JsonResponse
      */
     protected function deleteFileWhenCreating(array $input)
     {
-        if ($response = $this->deleteFileIfIsFileDeleteRequest($input)) {
-            return $response;
+        if (! array_key_exists(Field::FILE_DELETE_FLAG, $input)) {
+            return;
         }
 
-        $input = $this->handleFileDelete($input);
-
         $column = $input['_column'] ?? null;
+        $filePath = $input['key'] ?? null;
+        $relation = $input['_relation'] ?? null;
 
-        if (isset($input[Field::FILE_DELETE_FLAG]) && $column) {
-            $this->builder->fields()->filter(function ($field) use ($column) {
-                /* @var Field $field */
+        if (! $column && ! $filePath) {
+            return;
+        }
 
-                return $column === $field->column() && $field instanceof UploadFieldInterface;
-            })->each(function (UploadFieldInterface $file) use ($input) {
-                /* @var Field $file */
-                $this->deleteFile($file, $input[Field::FILE_DELETE_FLAG]);
-            });
+        if (empty($relation)) {
+            $field = $this->findFieldByName($column);
+        } else {
+            $field = $this->getFieldByRelationName($relation[0], $column);
+        }
+
+        if ($field && $field instanceof UploadFieldInterface) {
+            $this->deleteFile($field, $filePath);
 
             return $this
                 ->response()
@@ -107,8 +120,8 @@ trait HasFiles
     /**
      * 删除文件.
      *
-     * @param UploadFieldInterface|Field $field
-     * @param array                      $input
+     * @param  UploadFieldInterface|Field  $field
+     * @param  array  $input
      */
     protected function deleteFile(UploadFieldInterface $field, $input = null)
     {
@@ -133,66 +146,31 @@ trait HasFiles
     }
 
     /**
-     * 如果是删除文件请求，则直接删除文件.
-     *
-     * @param array $data
-     *
-     * @return \Illuminate\Http\JsonResponse|void
-     */
-    protected function deleteFileIfIsFileDeleteRequest(array $data)
-    {
-        if (! array_key_exists(Field::FILE_DELETE_FLAG, $data)) {
-            return;
-        }
-
-        $column = $data['_column'] ?? null;
-        $filePath = $data['key'] ?? null;
-        $relation = $data['_relation'] ?? null;
-
-        if (! $column && ! $filePath) {
-            return;
-        }
-
-        if (empty($relation)) {
-            $field = $this->findFieldByName($column);
-        } else {
-            $field = $this->getFieldByRelationName($relation[0], $column);
-        }
-
-        if ($field && $field instanceof UploadFieldInterface) {
-            $this->deleteFile($field, $filePath);
-
-            return $this
-                ->response()
-                ->status(true)
-                ->send();
-        }
-    }
-
-    /**
      * 获取hasMany的子表单字段.
      *
-     * @param string $relation
-     * @param string $column
-     *
+     * @param  string  $relation
+     * @param  string  $column
      * @return mixed
      */
     public function getFieldByRelationName($relation, $column)
     {
         $relation = $this->findFieldByName($relation);
-
-        if ($relation && $relation instanceof Field\HasMany) {
-            return $relation->buildNestedForm()->fields()->first(function ($field) use ($column) {
-                return $field->column() === $column;
-            });
+        if ($relation) {
+            if ($relation instanceof Field\HasMany) {
+                return $relation->buildNestedForm()->fields()->first(function ($field) use ($column) {
+                    return $field->column() === $column;
+                });
+            } elseif ($relation instanceof Field\Embeds) {
+                return $relation->field($column);
+            }
         }
     }
 
     /**
      * 根据传入数据删除文件.
      *
-     * @param array $input
-     * @param bool  $forceDelete
+     * @param  array  $input
+     * @param  bool  $forceDelete
      */
     public function deleteFiles($input, $forceDelete = false)
     {
@@ -212,8 +190,7 @@ trait HasFiles
     }
 
     /**
-     * @param array $input
-     *
+     * @param  array  $input
      * @return array
      */
     protected function handleFileDelete(array $input = [])
@@ -241,7 +218,13 @@ trait HasFiles
             }
         }
 
-        $input = Arr::only($input, [Field::FILE_DELETE_FLAG, $input['_column']]);
+        $fields = [Field::FILE_DELETE_FLAG, $input['_column']];
+
+        if (isset($relation)) {
+            $fields[] = $relation;
+        }
+
+        $input = Arr::only($input, $fields);
 
         $this->request->replace($input);
 

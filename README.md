@@ -5,8 +5,8 @@
 <br>
 
 <p align="center">
-    <a href="https://travis-ci.org/jqhph/dcat-admin">
-        <img src="https://travis-ci.org/jqhph/dcat-admin.svg?branch=master" alt="Build Status">
+    <a href="https://github.com/jqhph/dcat-admin/actions">
+        <img src="https://github.com/jqhph/dcat-admin/workflows/Laravel%20Dusk/badge.svg" alt="Build Status">
     </a>
     <a href="https://styleci.io/repos/182349597">
         <img src="https://github.styleci.io/repos/182349597/shield" alt="StyleCI">
@@ -20,8 +20,8 @@
 <p align=""><code>Dcat Admin</code>是一个基于<a href="https://www.laravel-admin.org/" target="_blank">laravel-admin</a>二次开发而成的后台系统构建工具，只需很少的代码即可快速构建出一个功能完善的高颜值后台系统。内置丰富的后台常用组件，开箱即用，让开发者告别冗杂的HTML代码，对后端开发者非常友好。</p>
 
 
-- [Learnku文档](https://learnku.com/docs/dcat-admin)
-- [中文文档](http://www.dcatadmin.com/)
+- [官方网站](http://www.dcatadmin.com)
+- [中文文档](https://learnku.com/docs/dcat-admin)
 - [English documentions](http://www.dcatadmin.com/docs/en-2.x/quick-start.html)
 - [Demo / 在线演示](http://103.39.211.179:8080/admin)
 - [Demo源码](https://github.com/jqhph/dcat-admin-demo)
@@ -29,14 +29,7 @@
 - [扩展](#)
 
 
-
-### 截图
-
-![](https://cdn.learnku.com/uploads/images/202008/23/38389/Oam6CYOobf.jpeg!large)
-![](https://cdn.learnku.com/uploads/images/202007/24/38389/35KJXfVXib.png!large)
-![](https://cdn.learnku.com/uploads/images/202008/23/38389/Lu7LZDSX0M.jpg!large)
-![](https://cdn.learnku.com/uploads/images/202004/24/38389/GBkt9jYnW0.png!large)
-![](https://cdn.learnku.com/uploads/images/202008/08/38389/lGYIdhifb5.jpg!large)
+![](https://cdn.learnku.com/uploads/images/202101/28/38389/YLmL7PLqH7.png!large)
 
 
 ### 功能特性
@@ -69,16 +62,14 @@
 
 ### 环境
  - PHP >= 7.1.0
- - Laravel 5.5.0 ~ 8.*
+ - Laravel 5.5.0 ~ 9.*
  - Fileinfo PHP Extension
 
 ### 安装
 
-> 如果安装过程中出现`composer`下载过慢或安装失败的情况，请运行命令`composer config -g repo.packagist composer https://mirrors.aliyun.com/composer/`把`composer`镜像更换为阿里云镜像。
-
-首先需要安装`laravel`，如已安装可以跳过此步骤
+首先需要安装`laravel`框架，如已安装可以跳过此步骤。如果您是第一次使用`laravel`，请务必先阅读文档 [安装 《Laravel中文文档》](https://learnku.com/docs/laravel/8.x/installation/9354) ！
 ```bash
-composer create-project --prefer-dist laravel/laravel 项目名称 7.*
+composer create-project --prefer-dist laravel/laravel 项目名称 9.*
 # 或
 composer create-project --prefer-dist laravel/laravel 项目名称
 ```
@@ -134,9 +125,10 @@ location / {
 
 | 扩展                                        | 描述                              | dcat-admin 版本                             |
 | ------------------------------------------------ | ---------------------------------------- |---------------------------------------- |
-| [dcat-page](https://github.com/jqhph/dcat-page)    | 简洁的静态站点构建工具 | * |
-| [ueditor](https://github.com/jqhph/dcat-admin-ueditor) | 百度在线编辑器     | * |
-| [grid-sortable](https://github.com/jqhph/dcat-admin-grid-sortable) | 表格拖曳排序工具      | * |
+| [mosiboom/dcat-iframe-tab](https://github.com/mosiboom/dcat-iframe-tab)    | IFRAME TAB标签切换 | 2.x |
+| [super-eggs/dcat-distpicker](https://github.com/super-eggs/dcat-distpicker)    | 省市区联动 | 2.x |
+| [ueditor](https://github.com/jqhph/dcat-admin-ueditor) | 百度在线编辑器     | 1.x |
+| [grid-sortable](https://github.com/jqhph/dcat-admin-grid-sortable) | 表格拖曳排序工具      | 1.x |
 
 
 ### 鸣谢

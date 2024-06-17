@@ -47,8 +47,7 @@ class BlockForm extends WidgetForm
     /**
      * 设置标题.
      *
-     * @param string $title
-     *
+     * @param  string  $title
      * @return $this
      */
     public function title($title)
@@ -66,8 +65,8 @@ class BlockForm extends WidgetForm
     public function showFooter()
     {
         $this->ajax(true);
-        $this->disableSubmitButton(false);
-        $this->disableResetButton(false);
+        $this->submitButton(true);
+        $this->resetButton(true);
 
         return $this;
     }
@@ -75,8 +74,7 @@ class BlockForm extends WidgetForm
     /**
      * 在当前列增加一块表单.
      *
-     * @param \Closure $callback
-     *
+     * @param  \Closure  $callback
      * @return $this
      */
     public function next(\Closure $callback)
@@ -98,7 +96,7 @@ class BlockForm extends WidgetForm
     {
         $field->attribute(Field::BUILD_IGNORE, true);
 
-        $this->form->builder()->pushField((clone $field)->display(false));
+        $this->form->builder()->pushField($field);
         $this->fields->push($field);
 
         if ($this->layout()->hasColumns()) {

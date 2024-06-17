@@ -4,6 +4,9 @@
 
     $soft = Dcat\Admin\Widgets\Checkbox::make('soft_deletes')->inline();
     $soft->options([1 => (trans('admin.scaffold.soft_delete'))]);
+    if (old('soft_deletes') != NULL) {
+        $soft->check(1);
+    }
 
     $actionCreators = Dcat\Admin\Widgets\Checkbox::make('create[]')->inline();
     $actionCreators->options([
@@ -13,7 +16,8 @@
         'controller' => (trans('admin.scaffold.create_controller')),
         'migrate' => (trans('admin.scaffold.run_migrate')),
         'lang' => (trans('admin.scaffold.create_lang')),
-    ])->checkAll(['migrate', 'migration']);
+    ]);
+    old('create') ? $actionCreators->check(old('create')) : $actionCreators->checkAll(['migration', 'migrate']);
 @endphp
 <style>
     .select2-container .select2-selection--single {
@@ -77,7 +81,7 @@
                     <span for="inputControllerName" class="col-sm-1 control-label text-capitalize">{{(trans('admin.scaffold.controller'))}}</span>
 
                     <div class="col-sm-4">
-                        <input type="text" name="controller_name" class="form-control text-capitalize" id="inputControllerName" placeholder="{{(trans('admin.scaffold.controller'))}}" value="{{ old('controller_name', "App\\Admin\\Controllers\\") }}">
+                        <input type="text" name="controller_name" class="form-control text-capitalize" id="inputControllerName" placeholder="{{(trans('admin.scaffold.controller'))}}" value="{{ old('controller_name', $namespaceBase."\\Controllers\\") }}">
                     </div>
                 </div>
 
@@ -86,7 +90,7 @@
                     <span for="inputRepositoryName" class="col-sm-1 control-label text-capitalize">{{(trans('admin.scaffold.repository'))}}</span>
 
                     <div class="col-sm-4">
-                        <input type="text" name="repository_name" class="form-control text-capitalize" id="inputRepositoryName" placeholder="{{(trans('admin.scaffold.repository'))}}" value="{{ old('repository_name', "App\\Admin\\Repositories\\") }}">
+                        <input type="text" name="repository_name" class="form-control text-capitalize" id="inputRepositoryName" placeholder="{{(trans('admin.scaffold.repository'))}}" value="{{ old('repository_name', $namespaceBase."\\Repositories\\") }}">
                     </div>
                 </div>
 
@@ -204,6 +208,7 @@
 
                 <div class='form-group'>
                     <button type="button" class="btn btn-sm btn-primary btn-outline text-capitalize" id="add-table-field"><i class="feather icon-plus"></i>&nbsp;&nbsp;{{(trans('admin.scaffold.add_field'))}}</button>
+                    <button type="button" class="btn btn-sm btn-primary btn-outline text-capitalize ml-1" id="sync-translation-with-comment"><i class="feather icon-repeat"></i>&nbsp;&nbsp;{{(trans('admin.scaffold.sync_translation_with_comment'))}}</button>
                 </div>
 
                 <div class="row">
@@ -301,8 +306,9 @@
             $fieldsBody = $('#table-fields tbody'),
             tpl = $('#table-field-tpl').html(),
             modelNamespace = 'App\\Models\\',
-            repositoryNamespace = 'App\\Admin\\Repositories\\',
-            controllerNamespace = 'App\\Admin\\Controllers\\',
+            namespaceBase = '{{ str_replace( '\\', '\\\\', $namespaceBase ) }}',
+            repositoryNamespace = namespaceBase + '\\Repositories\\',
+            controllerNamespace = namespaceBase + '\\Controllers\\',
             dataTypeMap = {!! json_encode($dataTypeMap) !!},
             helpers = Dcat.helpers;
 
@@ -332,6 +338,22 @@
 
         $('#add-table-field').click(function (event) {
             addField();
+        });
+
+        $('#sync-translation-with-comment').click(function (event) {
+            var element = $('#table-fields-sortable tr');
+            if (element.length > 0) {
+                element.each(function (i, v) {
+                    var translation = $(v).find('input[name="fields[' + i + '][translation]"]');
+                    var comment = $(v).find('input[name="fields[' + i + '][comment]"]');
+                    if (translation.val() !== "" && comment.val() === "") {
+                        comment.val(translation.val());
+                    }
+                    if (translation.val() === "" && comment.val() !== "") {
+                        translation.val(comment.val());
+                    }
+                });
+            }
         });
 
         $('#table-fields').on('click', '.table-field-remove', function(event) {

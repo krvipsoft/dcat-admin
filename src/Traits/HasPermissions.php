@@ -2,7 +2,6 @@
 
 namespace Dcat\Admin\Traits;
 
-use Dcat\Admin\Models\Role;
 use Dcat\Admin\Support\Helper;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
@@ -33,10 +32,10 @@ trait HasPermissions
      * Check if user has permission.
      *
      * @param $ability
-     *
+     * @param  array|mixed  $arguments
      * @return bool
      */
-    public function can($ability): bool
+    public function can($ability, $paramters = []): bool
     {
         if (! $ability) {
             return false;
@@ -58,7 +57,6 @@ trait HasPermissions
      * Check if user has no permission.
      *
      * @param $permission
-     *
      * @return bool
      */
     public function cannot(string $permission): bool
@@ -73,14 +71,15 @@ trait HasPermissions
      */
     public function isAdministrator(): bool
     {
-        return $this->isRole(Role::ADMINISTRATOR);
+        $roleModel = config('admin.database.roles_model');
+
+        return $this->isRole($roleModel::ADMINISTRATOR);
     }
 
     /**
      * Check if user is $role.
      *
-     * @param string $role
-     *
+     * @param  string  $role
      * @return mixed
      */
     public function isRole(string $role): bool
@@ -95,8 +94,7 @@ trait HasPermissions
     /**
      * Check if user in $roles.
      *
-     * @param string|array|Arrayable $roles
-     *
+     * @param  string|array|Arrayable  $roles
      * @return mixed
      */
     public function inRoles($roles = []): bool
@@ -114,7 +112,6 @@ trait HasPermissions
      * If visible for roles.
      *
      * @param $roles
-     *
      * @return bool
      */
     public function visible($roles = []): bool
@@ -135,10 +132,8 @@ trait HasPermissions
      *
      * @return void
      */
-    protected static function boot()
+    protected static function bootHasPermissions()
     {
-        parent::boot();
-
         static::deleting(function ($model) {
             $model->roles()->detach();
         });

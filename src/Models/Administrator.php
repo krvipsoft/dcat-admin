@@ -6,6 +6,7 @@ use Dcat\Admin\Traits\HasDateTimeFormatter;
 use Dcat\Admin\Traits\HasPermissions;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Storage;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\URL;
  *
  * @property Role[] $roles
  */
-class Administrator extends Model implements AuthenticatableContract
+class Administrator extends Model implements AuthenticatableContract, Authorizable
 {
     use Authenticatable,
         HasPermissions,
@@ -29,17 +30,22 @@ class Administrator extends Model implements AuthenticatableContract
     /**
      * Create a new Eloquent model instance.
      *
-     * @param array $attributes
+     * @param  array  $attributes
      */
     public function __construct(array $attributes = [])
+    {
+        $this->init();
+
+        parent::__construct($attributes);
+    }
+
+    protected function init()
     {
         $connection = config('admin.database.connection') ?: config('database.default');
 
         $this->setConnection($connection);
 
         $this->setTable(config('admin.database.users_table'));
-
-        parent::__construct($attributes);
     }
 
     /**
@@ -79,8 +85,7 @@ class Administrator extends Model implements AuthenticatableContract
     /**
      * 判断是否允许查看菜单.
      *
-     * @param array|Menu $menu
-     *
+     * @param  array|Menu  $menu
      * @return bool
      */
     public function canSeeMenu($menu)

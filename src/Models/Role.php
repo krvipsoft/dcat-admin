@@ -18,19 +18,22 @@ class Role extends Model
     protected $fillable = ['name', 'slug'];
 
     /**
-     * Create a new Eloquent model instance.
-     *
-     * @param array $attributes
+     * {@inheritDoc}
      */
     public function __construct(array $attributes = [])
+    {
+        $this->init();
+
+        parent::__construct($attributes);
+    }
+
+    protected function init()
     {
         $connection = config('admin.database.connection') ?: config('database.default');
 
         $this->setConnection($connection);
 
         $this->setTable(config('admin.database.roles_table'));
-
-        parent::__construct($attributes);
     }
 
     /**
@@ -62,10 +65,21 @@ class Role extends Model
     }
 
     /**
+     * @return BelongsToMany
+     */
+    public function menus(): BelongsToMany
+    {
+        $pivotTable = config('admin.database.role_menu_table');
+
+        $relatedModel = config('admin.database.menu_model');
+
+        return $this->belongsToMany($relatedModel, $pivotTable, 'role_id', 'menu_id')->withTimestamps();
+    }
+
+    /**
      * Check user has permission.
      *
      * @param $permission
-     *
      * @return bool
      */
     public function can(?string $permission): bool
@@ -77,7 +91,6 @@ class Role extends Model
      * Check user has no permission.
      *
      * @param $permission
-     *
      * @return bool
      */
     public function cannot(?string $permission): bool
@@ -88,8 +101,7 @@ class Role extends Model
     /**
      * Get id of the permission by id.
      *
-     * @param array $roleIds
-     *
+     * @param  array  $roleIds
      * @return \Illuminate\Support\Collection
      */
     public static function getPermissionId(array $roleIds)
@@ -115,8 +127,7 @@ class Role extends Model
     }
 
     /**
-     * @param string $slug
-     *
+     * @param  string  $slug
      * @return bool
      */
     public static function isAdministrator(?string $slug)

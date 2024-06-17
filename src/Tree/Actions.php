@@ -47,8 +47,7 @@ class Actions implements Renderable
     ];
 
     /**
-     * @param string|Renderable|\Dcat\Admin\Actions\Action|\Illuminate\Contracts\Support\Htmlable $action
-     *
+     * @param  string|Renderable|\Dcat\Admin\Actions\Action|\Illuminate\Contracts\Support\Htmlable  $action
      * @return $this
      */
     public function append($action)
@@ -61,8 +60,7 @@ class Actions implements Renderable
     }
 
     /**
-     * @param string|Renderable|\Dcat\Admin\Actions\Action|\Illuminate\Contracts\Support\Htmlable $action
-     *
+     * @param  string|Renderable|\Dcat\Admin\Actions\Action|\Illuminate\Contracts\Support\Htmlable  $action
      * @return $this
      */
     public function prepend($action)
@@ -79,25 +77,40 @@ class Actions implements Renderable
         return $this->row->{$this->parent()->getKeyName()};
     }
 
+    public function quickEdit(bool $value = true)
+    {
+        $this->actions['quickEdit'] = $value;
+
+        return $this;
+    }
+
     public function disableQuickEdit(bool $value = true)
     {
-        $this->actions['quickEdit'] = ! $value;
+        return $this->quickEdit(! $value);
+    }
+
+    public function edit(bool $value = true)
+    {
+        $this->actions['edit'] = $value;
 
         return $this;
     }
 
     public function disableEdit(bool $value = true)
     {
-        $this->actions['edit'] = ! $value;
+        return $this->edit(! $value);
+    }
+
+    public function delete(bool $value = true)
+    {
+        $this->actions['delete'] = $value;
 
         return $this;
     }
 
     public function disableDelete(bool $value = true)
     {
-        $this->actions['delete'] = ! $value;
-
-        return $this;
+        return $this->delete(! $value);
     }
 
     public function render()

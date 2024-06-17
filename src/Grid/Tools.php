@@ -13,9 +13,12 @@ use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Illuminate\Support\Traits\Macroable;
 
 class Tools implements Renderable
 {
+    use Macroable;
+
     /**
      * Parent grid.
      *
@@ -38,7 +41,7 @@ class Tools implements Renderable
     /**
      * Create a new Tools instance.
      *
-     * @param Grid $grid
+     * @param  Grid  $grid
      */
     public function __construct(Grid $grid)
     {
@@ -54,16 +57,22 @@ class Tools implements Renderable
      */
     protected function appendDefaultTools()
     {
-        $this->append(new BatchActions())
+        $this->append($this->makeBatchActions())
             ->append(new RefreshButton())
             ->append(new FilterButton());
+    }
+
+    protected function makeBatchActions()
+    {
+        $class = $this->grid->option('batch_actions_class') ?: (config('admin.grid.batch_action_class') ?: BatchActions::class);
+
+        return new $class();
     }
 
     /**
      * Append tools.
      *
-     * @param AbstractTool|string|\Closure|Renderable|Htmlable $tool
-     *
+     * @param  AbstractTool|string|\Closure|Renderable|Htmlable  $tool
      * @return $this
      */
     public function append($tool)
@@ -78,8 +87,7 @@ class Tools implements Renderable
     /**
      * Prepend a tool.
      *
-     * @param AbstractTool|string|\Closure|Renderable|Htmlable $tool
-     *
+     * @param  AbstractTool|string|\Closure|Renderable|Htmlable  $tool
      * @return $this
      */
     public function prepend($tool)
@@ -92,8 +100,7 @@ class Tools implements Renderable
     }
 
     /**
-     * @param mixed $tool
-     *
+     * @param  mixed  $tool
      * @return void
      */
     protected function prepareAction($tool)
@@ -128,8 +135,7 @@ class Tools implements Renderable
     }
 
     /**
-     * @param bool $value
-     *
+     * @param  bool  $value
      * @return $this
      */
     public function withOutline(bool $value)
@@ -172,7 +178,7 @@ class Tools implements Renderable
     }
 
     /**
-     * @param \Closure|BatchAction|BatchAction[] $value
+     * @param  \Closure|BatchAction|BatchAction[]  $value
      */
     public function batch($value)
     {
@@ -215,8 +221,7 @@ class Tools implements Renderable
     }
 
     /**
-     * @param string $value
-     *
+     * @param  string  $value
      * @return string
      */
     public function format(string $value)
@@ -225,8 +230,7 @@ class Tools implements Renderable
     }
 
     /**
-     * @param string $value
-     *
+     * @param  string  $value
      * @return string
      */
     protected function addButtonOutline($value)
